@@ -11,6 +11,17 @@ import { TestsManager } from './components/Admin/TestsManager';
 import { StudentDashboard } from './components/Student/StudentDashboard';
 import { GraduationCap } from 'lucide-react';
 
+// Independent ambient background with fluid animated blobs
+function LiquidMeshBackground() {
+  return (
+    <div className="liquid-mesh-container" aria-hidden="true">
+      <div className="liquid-mesh-blob blob-blue" />
+      <div className="liquid-mesh-blob blob-violet" />
+      <div className="liquid-mesh-blob blob-teal" />
+    </div>
+  );
+}
+
 function AppContent() {
   const { currentUser, userProfile, loading, logout } = useAuth();
 
@@ -52,8 +63,9 @@ function AppContent() {
   // Loading skeleton screen
   if (loading) {
     return (
-      <div className="liquid-mesh-container min-h-screen flex items-center justify-center p-4">
-        <div className="glass-panel p-8 rounded-3xl flex flex-col items-center space-y-4 max-w-xs w-full text-center shadow-2xl">
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-100 dark:bg-slate-950 transition-colors">
+        <LiquidMeshBackground />
+        <div className="relative z-10 glass-panel p-8 rounded-3xl flex flex-col items-center space-y-4 max-w-xs w-full text-center shadow-2xl">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-sky-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 animate-pulse">
             <GraduationCap className="w-7 h-7" />
           </div>
@@ -76,8 +88,11 @@ function AppContent() {
   // If not signed in, show the Liquid Glass Login Page
   if (!currentUser) {
     return (
-      <div className="liquid-mesh-container min-h-screen">
-        <LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
+      <div className="relative min-h-screen bg-slate-100 dark:bg-slate-950 transition-colors">
+        <LiquidMeshBackground />
+        <div className="relative z-10">
+          <LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
+        </div>
       </div>
     );
   }
@@ -85,8 +100,9 @@ function AppContent() {
   // If currentUser is signed in but userProfile is missing, do not render panel
   if (!userProfile) {
     return (
-      <div className="liquid-mesh-container min-h-screen flex items-center justify-center p-4">
-        <div className="glass-panel p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-100 dark:bg-slate-950 transition-colors">
+        <LiquidMeshBackground />
+        <div className="relative z-10 glass-panel p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
           <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
             Verifying account credentials...
           </p>
@@ -98,37 +114,41 @@ function AppContent() {
   const role = userProfile.role;
 
   return (
-    <div className="liquid-mesh-container min-h-screen flex flex-col text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Liquid Glass Navigation: Desktop Sidebar + Sticky Top Header + Floating Mobile Tab Bar */}
-      <Navigation
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        darkMode={darkMode}
-        onToggleDarkMode={toggleDarkMode}
-      />
+    <div className="relative min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+      <LiquidMeshBackground />
 
-      {/* Main View Area: padded for desktop sidebar (lg:pl-64) and mobile floating bar (pb-28) */}
-      <div className="lg:pl-64 flex-1 flex flex-col min-h-screen">
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 lg:pb-12">
-          {/* Admin Views */}
-          {role === 'admin' && (
-            <div>
-              {currentTab === 'dashboard' && (
-                <AdminDashboard onNavigate={(tab) => setCurrentTab(tab)} />
-              )}
-              {currentTab === 'attendance' && <AttendanceManager />}
-              {currentTab === 'students' && <StudentManagement />}
-              {currentTab === 'reports' && <ReportsManager />}
-              {currentTab === 'tasks' && <TaskManager />}
-              {currentTab === 'tests' && <TestsManager />}
-            </div>
-          )}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Liquid Glass Navigation: Desktop Sidebar + Sticky Top Header + Floating Mobile Tab Bar */}
+        <Navigation
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+        />
 
-          {/* Student Views */}
-          {role === 'student' && (
-            <StudentDashboard currentTab={currentTab} />
-          )}
-        </main>
+        {/* Main View Area: padded for desktop sidebar (lg:pl-64) and mobile floating bar (pb-28) */}
+        <div className="lg:pl-64 flex-1 flex flex-col min-h-screen">
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 lg:pb-12">
+            {/* Admin Views */}
+            {role === 'admin' && (
+              <div>
+                {currentTab === 'dashboard' && (
+                  <AdminDashboard onNavigate={(tab) => setCurrentTab(tab)} />
+                )}
+                {currentTab === 'attendance' && <AttendanceManager />}
+                {currentTab === 'students' && <StudentManagement />}
+                {currentTab === 'reports' && <ReportsManager />}
+                {currentTab === 'tasks' && <TaskManager />}
+                {currentTab === 'tests' && <TestsManager />}
+              </div>
+            )}
+
+            {/* Student Views */}
+            {role === 'student' && (
+              <StudentDashboard currentTab={currentTab} />
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
