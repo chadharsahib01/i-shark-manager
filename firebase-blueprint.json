@@ -1,0 +1,254 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document containing account role, personal information, and status.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier matching Firebase Auth UID"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "format": "email"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "User's full name alias",
+          "maxLength": 100
+        },
+        "role": {
+          "type": "string",
+          "description": "User role in the system",
+          "enum": ["admin", "student"]
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the user account is active"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number",
+          "maxLength": 25
+        },
+        "rollNumber": {
+          "type": "string",
+          "description": "Student roll number or registration ID",
+          "maxLength": 50
+        },
+        "batch": {
+          "type": "string",
+          "description": "Class, course, or batch identifier",
+          "maxLength": 50
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the user account is active alias"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation ISO date timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update ISO date timestamp"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance record for a student on a specific date.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Attendance record unique ID"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of attendance in YYYY-MM-DD format",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Student UID"
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Cached student full name",
+          "maxLength": 100
+        },
+        "status": {
+          "type": "string",
+          "description": "Attendance status",
+          "enum": ["Present", "Late", "Absent", "Leave"]
+        },
+        "inTime": {
+          "type": "string",
+          "description": "In-time mark (e.g. 09:15 AM)",
+          "maxLength": 20
+        },
+        "outTime": {
+          "type": "string",
+          "description": "Out-time mark (e.g. 04:30 PM)",
+          "maxLength": 20
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or remarks",
+          "maxLength": 500
+        },
+        "markedBy": {
+          "type": "string",
+          "description": "Admin UID who marked attendance"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "date", "studentId", "status"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Homework or project task assigned to students.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Task unique ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Task title",
+          "maxLength": 150
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed task instructions or description",
+          "maxLength": 2000
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Due date in YYYY-MM-DD format",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "Scope of assignment",
+          "enum": ["all", "selected"]
+        },
+        "assignedStudentIds": {
+          "type": "array",
+          "description": "List of student IDs if assignedTo is selected"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Admin UID who created the task"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "title", "dueDate", "assignedTo"]
+    },
+    "Test": {
+      "title": "Test",
+      "description": "Test, quiz, or examination schedule.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Test unique ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Test title",
+          "maxLength": 150
+        },
+        "type": {
+          "type": "string",
+          "description": "Evaluation type",
+          "enum": ["Quiz", "Test", "Exam", "Midterm", "Final"]
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject or course name",
+          "maxLength": 100
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of test in YYYY-MM-DD format",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "time": {
+          "type": "string",
+          "description": "Scheduled time (e.g. 10:00 AM)",
+          "maxLength": 25
+        },
+        "syllabus": {
+          "type": "string",
+          "description": "Syllabus or topics covered",
+          "maxLength": 2000
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "Scope of assignment",
+          "enum": ["all", "selected"]
+        },
+        "assignedStudentIds": {
+          "type": "array",
+          "description": "List of student IDs if assignedTo is selected"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Admin UID who created the test"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "title", "type", "subject", "date", "time", "assignedTo"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/User",
+      "description": "Collection of all institute user profiles (admins and students)"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "#/entities/Attendance",
+      "description": "Daily attendance logs recorded by institute admins"
+    },
+    "/tasks/{taskId}": {
+      "schema": "#/entities/Task",
+      "description": "Institute tasks, assignments, and homework"
+    },
+    "/tests/{testId}": {
+      "schema": "#/entities/Test",
+      "description": "Institute tests, quizzes, and exam schedules"
+    }
+  }
+}
