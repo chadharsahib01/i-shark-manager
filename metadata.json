@@ -1,6 +1,5 @@
 {
   "name": "Institute Manager",
   "description": "I-SHARK Institute of Computer Technologies - Management portal for attendance tracking, student registry, task assignments, test scheduling, and reports.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "requestFramePermissions": []
 }

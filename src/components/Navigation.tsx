@@ -11,7 +11,8 @@ import {
   Moon,
   Sun,
   Shield,
-  User
+  User,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -33,34 +34,33 @@ export const Navigation: React.FC<NavigationProps> = ({
   const role: UserRole = (userProfile?.role as UserRole) || 'student';
 
   const adminNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'students', label: 'Students', icon: Users },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { id: 'tests', label: 'Tests', icon: FileText },
-    { id: 'reports', label: 'Reports', icon: BarChart3 }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, code: 'DSB-01' },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck, code: 'ATT-02' },
+    { id: 'students', label: 'Students', icon: Users, code: 'STD-03' },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare, code: 'TSK-04' },
+    { id: 'tests', label: 'Tests', icon: FileText, code: 'TST-05' },
+    { id: 'reports', label: 'Reports', icon: BarChart3, code: 'RPT-06' }
   ];
 
   const studentNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { id: 'tests', label: 'Tests', icon: FileText }
+    { id: 'dashboard', label: 'My Pass', icon: LayoutDashboard, code: 'MYP-01' },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck, code: 'ATT-02' },
+    { id: 'tasks', label: 'Vouchers', icon: CheckSquare, code: 'TSK-03' },
+    { id: 'tests', label: 'Admit Slips', icon: FileText, code: 'TST-04' }
   ];
 
   const navItems = role === 'admin' ? adminNavItems : studentNavItems;
-
-  const currentTabLabel = navItems.find((n) => n.id === currentTab)?.label || 'Dashboard';
+  const currentTabObj = navItems.find((n) => n.id === currentTab) || navItems[0];
 
   return (
     <>
       {/* =========================================================================
-          DESKTOP GLASS SIDEBAR (hidden on mobile/tablet, visible on lg+)
+          DESKTOP CYBER SIDEBAR (hidden on mobile/tablet, visible on lg+)
          ========================================================================= */}
       <aside className="hidden lg:flex fixed top-0 bottom-0 left-0 w-64 z-30 p-4 flex-col pointer-events-none">
-        <div className="glass-panel h-full w-full rounded-[28px] p-5 flex flex-col justify-between pointer-events-auto overflow-hidden relative">
-          {/* Subtle top inner light bar */}
-          <div className="absolute top-0 left-6 right-6 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500/40 dark:via-indigo-400/40 to-transparent" />
+        <div className="ticket-pass h-full w-full p-5 flex flex-col justify-between pointer-events-auto overflow-hidden relative">
+          {/* Subtle top laser border accent */}
+          <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent" />
 
           {/* Institute Brand Header */}
           <div>
@@ -68,38 +68,39 @@ export const Navigation: React.FC<NavigationProps> = ({
               className="flex items-center space-x-3 cursor-pointer group mb-6"
               onClick={() => onSelectTab('dashboard')}
             >
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-200">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 group-hover:scale-105 transition-transform duration-200">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div className="min-w-0">
-                <h1 className="font-bold text-sm tracking-tight text-slate-900 dark:text-white truncate">
-                  I-SHARK Manager
-                </h1>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate leading-tight font-medium">
-                  Institute of Computer Tech
+                <div className="flex items-center space-x-1.5">
+                  <h1 className="font-black text-sm tracking-tight text-white dark:text-white uppercase">
+                    I-SHARK ICT
+                  </h1>
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
+                </div>
+                <p className="tag-mono text-[9px] text-slate-400 truncate">
+                  ACADEMIC PORTAL V2.4
                 </p>
               </div>
             </div>
 
-            {/* Role Badge */}
-            <div className="mb-6 px-3 py-2 rounded-2xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between">
+            {/* Role Admit Badge Ticket Header */}
+            <div className="mb-6 p-2.5 rounded-xl bg-slate-900/90 dark:bg-black/50 border border-violet-500/20 flex items-center justify-between shadow-inner">
               <div className="flex items-center space-x-2">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    role === 'admin' ? 'bg-indigo-500 animate-pulse' : 'bg-emerald-500'
-                  }`}
-                />
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {role === 'admin' ? 'Administrator' : 'Student Portal'}
+                <div className="p-1 rounded-md bg-violet-500/10 text-violet-400">
+                  {role === 'admin' ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                </div>
+                <span className="text-xs font-bold text-slate-200 tracking-tight">
+                  {role === 'admin' ? 'Administration' : 'Student Portal'}
                 </span>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-600/60">
-                {role === 'admin' ? 'Admin' : 'Student'}
+              <span className="tag-mono text-[9px] px-2 py-0.5 rounded-md font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                {role === 'admin' ? 'ADM-CORE' : 'STUDENT'}
               </span>
             </div>
 
             {/* Navigation List */}
-            <nav className="space-y-1.5" aria-label="Desktop Sidebar Navigation">
+            <nav className="space-y-1.5" aria-label="Desktop Navigation">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentTab === item.id;
@@ -108,22 +109,27 @@ export const Navigation: React.FC<NavigationProps> = ({
                     key={item.id}
                     id={`sidebar-nav-${item.id}`}
                     onClick={() => onSelectTab(item.id)}
-                    className={`w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-xs font-medium transition-all duration-200 ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 font-semibold translate-x-1'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60'
+                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30 translate-x-1'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                    <span className="truncate">{item.label}</span>
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    <span className={`tag-mono text-[9px] opacity-75 ${isActive ? 'text-violet-200' : 'text-slate-500'}`}>
+                      {item.code}
+                    </span>
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* User Profile & Global Utilities Bottom Area */}
-          <div className="pt-4 border-t border-slate-200/60 dark:border-slate-800/60 space-y-3">
+          {/* User Profile & Ticket Perforation Bottom Area */}
+          <div className="pt-3 border-t border-dashed border-slate-700/80 space-y-3">
             <div className="flex items-center justify-between">
               {/* Dark mode toggle */}
               <button
@@ -131,11 +137,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                 onClick={onToggleDarkMode}
                 id="btn-sidebar-theme-toggle"
                 aria-label="Toggle dark mode"
-                className="p-2.5 rounded-2xl bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 transition-all shadow-xs"
+                className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all btn-tactile"
                 title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+                {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-violet-400" />}
               </button>
+
+              {/* Monospace Code Pill */}
+              <div className="tag-mono text-[9px] text-slate-500 px-2 py-1 rounded bg-slate-900 border border-slate-800">
+                AUTH-OK
+              </div>
 
               {/* Logout Button */}
               <button
@@ -143,24 +154,24 @@ export const Navigation: React.FC<NavigationProps> = ({
                 onClick={logout}
                 id="btn-sidebar-logout"
                 aria-label="Sign Out"
-                className="p-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all shadow-xs"
+                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all btn-tactile"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
 
-            {/* User Info Capsule */}
-            <div className="p-3 rounded-2xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-sky-400 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+            {/* Inset User Info Capsule */}
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
                 {(userProfile?.fullName || currentUser?.email || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-900 dark:text-white truncate leading-snug">
-                  {userProfile?.fullName || 'Institute User'}
+                <p className="text-xs font-bold text-slate-100 truncate leading-snug">
+                  {userProfile?.fullName || 'Academic User'}
                 </p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                  {userProfile?.rollNumber || currentUser?.email || ''}
+                <p className="tag-mono text-[9px] text-slate-400 truncate">
+                  {userProfile?.rollNumber || currentUser?.email || 'ID: UNKNOWN'}
                 </p>
               </div>
             </div>
@@ -169,46 +180,50 @@ export const Navigation: React.FC<NavigationProps> = ({
       </aside>
 
       {/* =========================================================================
-          STICKY TOP GLASS HEADER (All viewports)
+          STICKY TOP CYBER HEADER
          ========================================================================= */}
       <header className="sticky top-0 z-20 w-full px-4 sm:px-6 lg:px-8 py-3 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Mobile Logo & Title */}
           <div className="flex items-center space-x-3 lg:hidden">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-sky-400 flex items-center justify-center text-white shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-violet-600/30">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
-                I-SHARK
+              <h1 className="font-black text-sm text-white tracking-tight uppercase">
+                I-SHARK ICT
               </h1>
-              <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
-                {currentTabLabel}
+              <p className="tag-mono text-[9px] text-violet-400 font-bold">
+                {currentTabObj.label} // {currentTabObj.code}
               </p>
             </div>
           </div>
 
-          {/* Desktop Breadcrumb/Page Title */}
+          {/* Desktop Breadcrumb/Page Title with Ticket Notch Pill */}
           <div className="hidden lg:flex items-center space-x-3">
-            <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-              {currentTabLabel}
+            <span className="text-xl font-black text-white tracking-tight">
+              {currentTabObj.label}
             </span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-white/70 dark:bg-slate-800/70 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-md">
-              {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+            <span className="tag-mono px-2.5 py-1 rounded-lg bg-slate-800/80 text-violet-300 border border-violet-500/20 flex items-center space-x-1.5 shadow-xs">
+              <Sparkles className="w-3 h-3 text-violet-400" />
+              <span>{currentTabObj.code}</span>
+            </span>
+            <span className="text-xs px-2.5 py-1 rounded-lg font-mono text-slate-400 bg-slate-900/60 border border-slate-800">
+              {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
 
           {/* Top Actions */}
           <div className="flex items-center space-x-2">
             <span
-              className={`hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+              className={`hidden sm:inline-flex items-center px-3 py-1 rounded-lg tag-mono font-bold ${
                 role === 'admin'
-                  ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
-                  : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                  ? 'bg-violet-500/10 text-violet-300 border border-violet-500/20'
+                  : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
               }`}
             >
-              {role === 'admin' ? <Shield className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
-              {role === 'admin' ? 'Chief Admin' : 'Enrolled Student'}
+              {role === 'admin' ? <Shield className="w-3.5 h-3.5 mr-1 text-violet-400" /> : <User className="w-3.5 h-3.5 mr-1 text-emerald-400" />}
+              {role === 'admin' ? 'CHIEF ADMIN' : 'STUDENT ENROLLED'}
             </span>
 
             {/* Mobile dark mode button */}
@@ -216,9 +231,9 @@ export const Navigation: React.FC<NavigationProps> = ({
               type="button"
               onClick={onToggleDarkMode}
               aria-label="Toggle dark mode"
-              className="lg:hidden p-2 rounded-2xl glass-panel text-slate-700 dark:text-slate-300"
+              className="lg:hidden p-2 rounded-xl bg-slate-800/80 text-slate-200 border border-slate-700"
             >
-              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+              {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-violet-400" />}
             </button>
 
             {/* Mobile quick sign out */}
@@ -227,7 +242,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               onClick={logout}
               aria-label="Sign Out"
               title="Sign Out"
-              className="lg:hidden p-2 rounded-2xl glass-panel text-rose-600 dark:text-rose-400"
+              className="lg:hidden p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -236,13 +251,13 @@ export const Navigation: React.FC<NavigationProps> = ({
       </header>
 
       {/* =========================================================================
-          FLOATING iOS-STYLE BOTTOM TAB BAR (Mobile & Tablet: < lg)
+          FLOATING BOTTOM TICKET BAR (Mobile & Tablet: < lg)
          ========================================================================= */}
       <nav
         className="lg:hidden fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-8 z-40 max-w-md mx-auto"
         aria-label="Mobile Bottom Navigation"
       >
-        <div className="glass-panel p-1.5 rounded-3xl flex items-center justify-around shadow-2xl backdrop-blur-2xl">
+        <div className="ticket-pass p-1.5 rounded-2xl flex items-center justify-around shadow-2xl bg-slate-900/95 border-violet-500/30 backdrop-blur-xl">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -251,17 +266,17 @@ export const Navigation: React.FC<NavigationProps> = ({
                 key={item.id}
                 id={`mobile-tab-${item.id}`}
                 onClick={() => onSelectTab(item.id)}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all duration-200 active:scale-95 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-200 active:scale-95 ${
                   isActive
-                    ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {isActive && (
-                  <span className="absolute inset-0 rounded-2xl bg-indigo-500/15 dark:bg-indigo-400/20 -z-10 animate-fade-in" />
+                  <span className="absolute inset-0 rounded-xl bg-violet-600 shadow-md shadow-violet-600/40 -z-10" />
                 )}
-                <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-                <span className="text-[10px] mt-0.5 tracking-tight font-medium truncate max-w-[54px]">
+                <Icon className={`w-4 h-4 transition-transform duration-200 ${isActive ? 'scale-110 text-white' : ''}`} />
+                <span className="text-[9px] mt-1 font-mono tracking-tight truncate max-w-[58px]">
                   {item.label}
                 </span>
               </button>

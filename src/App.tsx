@@ -11,13 +11,14 @@ import { TestsManager } from './components/Admin/TestsManager';
 import { StudentDashboard } from './components/Student/StudentDashboard';
 import { GraduationCap } from 'lucide-react';
 
-// Independent ambient background with fluid animated blobs
-function LiquidMeshBackground() {
+// Cyber Canvas Background with animated blueprint grid and ambient glowing orbs
+function CyberCanvasBackground() {
   return (
-    <div className="liquid-mesh-container" aria-hidden="true">
-      <div className="liquid-mesh-blob blob-blue" />
-      <div className="liquid-mesh-blob blob-violet" />
-      <div className="liquid-mesh-blob blob-teal" />
+    <div className="cyber-canvas-background" aria-hidden="true">
+      <div className="cyber-grid-overlay" />
+      <div className="cyber-glow-blob blob-violet" />
+      <div className="cyber-glow-blob blob-rose" />
+      <div className="cyber-glow-blob blob-lime" />
     </div>
   );
 }
@@ -63,33 +64,34 @@ function AppContent() {
   // Loading skeleton screen
   if (loading) {
     return (
-      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-100 dark:bg-slate-950 transition-colors">
-        <LiquidMeshBackground />
-        <div className="relative z-10 glass-panel p-8 rounded-3xl flex flex-col items-center space-y-4 max-w-xs w-full text-center shadow-2xl">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-sky-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 animate-pulse">
-            <GraduationCap className="w-7 h-7" />
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-900 text-slate-100 dark:bg-slate-950 transition-colors">
+        <CyberCanvasBackground />
+        <div className="relative z-10 cyber-panel p-8 rounded-3xl flex flex-col items-center space-y-5 max-w-xs w-full text-center shadow-2xl border border-violet-500/20">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 animate-pulse">
+            <GraduationCap className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              I-SHARK Institute
+            <span className="tag-mono text-violet-400 font-semibold text-[10px]">AUTHENTICATING PORTAL</span>
+            <h2 className="text-lg font-black tracking-tight text-white mt-1">
+              I-SHARK ICT
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Synchronizing academic portal...
+            <p className="text-xs text-slate-400 mt-1 font-mono">
+              INITIALIZING ADMIT MATRIX...
             </p>
           </div>
-          <div className="w-full bg-slate-200/60 dark:bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-indigo-600 dark:bg-indigo-400 h-1.5 rounded-full w-1/2 animate-[shimmer_1.5s_infinite]" />
+          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-gradient-to-r from-violet-500 to-rose-400 h-1.5 rounded-full w-2/3 animate-pulse" />
           </div>
         </div>
       </div>
     );
   }
 
-  // If not signed in, show the Liquid Glass Login Page
+  // If not signed in, show the Login Page
   if (!currentUser) {
     return (
-      <div className="relative min-h-screen bg-slate-100 dark:bg-slate-950 transition-colors">
-        <LiquidMeshBackground />
+      <div className="relative min-h-screen bg-slate-900 dark:bg-slate-950 transition-colors">
+        <CyberCanvasBackground />
         <div className="relative z-10">
           <LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
         </div>
@@ -100,11 +102,11 @@ function AppContent() {
   // If currentUser is signed in but userProfile is missing, do not render panel
   if (!userProfile) {
     return (
-      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-100 dark:bg-slate-950 transition-colors">
-        <LiquidMeshBackground />
-        <div className="relative z-10 glass-panel p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
-          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Verifying account credentials...
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-900 dark:bg-slate-950 transition-colors">
+        <CyberCanvasBackground />
+        <div className="relative z-10 cyber-panel p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
+          <p className="text-xs font-mono font-semibold text-slate-400">
+            VERIFYING ACADEMIC CREDENTIALS...
           </p>
         </div>
       </div>
@@ -114,11 +116,11 @@ function AppContent() {
   const role = userProfile.role;
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-      <LiquidMeshBackground />
+    <div className="relative min-h-screen flex flex-col bg-slate-900 dark:bg-slate-950 text-slate-100 transition-colors">
+      <CyberCanvasBackground />
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Liquid Glass Navigation: Desktop Sidebar + Sticky Top Header + Floating Mobile Tab Bar */}
+        {/* Navigation: Cyber Sidebar + Sticky Header + Floating Mobile Tab Bar */}
         <Navigation
           currentTab={currentTab}
           onSelectTab={setCurrentTab}

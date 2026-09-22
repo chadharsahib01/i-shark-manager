@@ -10,7 +10,12 @@ import {
   Calendar,
   BookOpen,
   Hash,
-  Award
+  Award,
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+  ChevronRight,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -39,7 +44,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [tests, setTests] = useState<TestItem[]>([]);
 
-  // Independent error states for each data source
+  // Independent error states
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
   const [tasksError, setTasksError] = useState<string | null>(null);
   const [testsError, setTestsError] = useState<string | null>(null);
@@ -49,6 +54,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   const currentMonthStr = todayStr.substring(0, 7);
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthStr);
   const [viewAllMonths, setViewAllMonths] = useState<boolean>(false);
+
+  // Active selected day for the Meeting-Card style calendar strip
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<string>(todayStr);
 
   const studentId = currentUser?.uid || '';
 
@@ -90,7 +98,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
     loadStudentData();
   }, [studentId]);
 
-  // Overall attendance metrics across entire recorded term
+  // Overall attendance metrics
   const overallSummary: AttendanceSummary = useMemo(() => {
     return calculateAttendanceSummary(attendance);
   }, [attendance]);
@@ -113,244 +121,383 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [tests, todayStr]);
 
-  // Liquid Glass Skeleton Loader
+  // Generate 7 days for the Meeting-Card Calendar Strip (Inspiration 2) centered around today
+  const weekDays = useMemo(() => {
+    const today = new Date();
+    const days = [];
+    for (let i = -3; i <= 3; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      const dayName = d.toLocaleDateString(undefined, { weekday: 'short' });
+      const dayNumber = d.getDate();
+
+      // Check if attendance exists for this day
+      const attRecord = attendance.find((a) => a.date === dateStr);
+
+      days.push({
+        dateStr,
+        dayName,
+        dayNumber,
+        status: attRecord ? attRecord.status : null,
+        isToday: dateStr === todayStr
+      });
+    }
+    return days;
+  }, [todayStr, attendance]);
+
+  // Loading skeleton screen
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse" aria-busy="true">
-        <div className="glass-panel h-36 rounded-[28px] p-6 flex flex-col justify-center space-y-3">
-          <div className="h-4 w-40 bg-slate-200/80 dark:bg-slate-800/80 rounded-full" />
-          <div className="h-8 w-64 bg-slate-200/80 dark:bg-slate-800/80 rounded-2xl" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass-panel h-44 rounded-3xl" />
-          <div className="glass-panel h-44 rounded-3xl" />
-          <div className="glass-panel h-44 rounded-3xl" />
+        <div className="ticket-pass h-48 rounded-3xl p-6 bg-slate-900/80 border-slate-800" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="ticket-pass h-28 rounded-2xl bg-slate-900/80 border-slate-800" />
+          <div className="ticket-pass h-28 rounded-2xl bg-slate-900/80 border-slate-800" />
+          <div className="ticket-pass h-28 rounded-2xl bg-slate-900/80 border-slate-800" />
+          <div className="ticket-pass h-28 rounded-2xl bg-slate-900/80 border-slate-800" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass-panel h-64 rounded-3xl" />
-          <div className="glass-panel h-64 rounded-3xl" />
+          <div className="ticket-pass h-64 rounded-3xl bg-slate-900/80 border-slate-800" />
+          <div className="ticket-pass h-64 rounded-3xl bg-slate-900/80 border-slate-800" />
         </div>
       </div>
     );
   }
 
-  // SVG Ring Progress Calculations
-  const radius = 38;
-  const circumference = 2 * Math.PI * radius;
   const isPercentNumeric = typeof overallSummary.percentage === 'number';
-  const strokeDashoffset = isPercentNumeric
-    ? circumference - ((overallSummary.percentage as number) / 100) * circumference
-    : circumference;
-
   const isGoodStanding = isPercentNumeric && (overallSummary.percentage as number) >= 75;
 
   /* =========================================================================
-     COMPONENTS SECTIONS
+     1. STUDENT BOARDING PASS TICKET (Inspiration 1)
      ========================================================================= */
-
-  // 1. Welcome Card
-  const WelcomeCard = (
-    <div className="glass-panel rounded-[28px] p-6 sm:p-7 relative overflow-hidden">
-      <div className="absolute top-0 left-12 right-12 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
-
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center space-x-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full bg-indigo-500/10 dark:bg-indigo-400/10 border border-indigo-500/20">
-            <Award className="w-3.5 h-3.5" />
-            <span>I-SHARK Student Portal</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Welcome, {userProfile?.fullName || 'Student'}!
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg">
-            I-SHARK Institute of Computer Technologies — Track your academic turnout rate, coursework deadlines, and upcoming examination schedules.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/70 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-              <Hash className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Roll: {userProfile?.rollNumber || 'Not assigned'}</span>
-            </span>
-            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/70 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-              <BookOpen className="w-3.5 h-3.5 text-sky-500" />
-              <span>Batch: {userProfile?.batch || 'General Batch'}</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Attendance Ring Gauge */}
-        <div className="shrink-0 p-4 rounded-3xl glass-panel-subtle flex items-center space-x-5 shadow-xs">
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r={radius}
-                className="stroke-slate-200 dark:stroke-slate-700"
-                strokeWidth="8"
-                fill="transparent"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r={radius}
-                className="stroke-indigo-600 dark:stroke-indigo-400 transition-all duration-700 ease-out"
-                strokeWidth="8"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                fill="transparent"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                {overallSummary.percentage}{isPercentNumeric ? '%' : ''}
-              </span>
-              <span className="text-[9px] font-semibold text-slate-400 uppercase">Rate</span>
-            </div>
-          </div>
-
+  const StudentBoardingPass = (
+    <div className="ticket-pass holo-sheen p-0 bg-slate-950 border-violet-500/30 shadow-2xl relative">
+      {/* Top Main Section */}
+      <div className="p-6 sm:p-7 relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="text-xs font-bold text-slate-900 dark:text-white">Attendance Standing</div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              {overallSummary.total > 0
-                ? `${overallSummary.present + overallSummary.late} of ${overallSummary.total} sessions`
-                : 'No sessions recorded yet'}
-            </div>
-            <div className="mt-2">
-              <span
-                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                  !isPercentNumeric
-                    ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                    : isGoodStanding
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
-                }`}
-              >
-                {!isPercentNumeric ? 'No Records' : isGoodStanding ? 'Good Standing' : 'Below 75% Target'}
+            <div className="flex items-center space-x-2.5 mb-2">
+              <span className="tag-mono px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40 font-bold flex items-center space-x-1">
+                <Sparkles className="w-3 h-3 text-violet-400" />
+                <span>OFFICIAL ACADEMIC BOARDING PASS</span>
               </span>
+              <span className="tag-mono text-[9px] text-slate-500">TERM 2026-A</span>
             </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
+              {userProfile?.fullName || 'Enrolled Student'}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1 max-w-xl">
+              I-SHARK Institute of Computer Technologies // Department of Computer Science & Software Engineering
+            </p>
+          </div>
+
+          {/* Quick Badges */}
+          <div className="flex flex-wrap sm:flex-col items-start sm:items-end gap-2 shrink-0">
+            <span className="tag-mono px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 flex items-center space-x-1.5 shadow-inner">
+              <Hash className="w-3.5 h-3.5 text-violet-400" />
+              <span>ROLL: {userProfile?.rollNumber || 'NOT ASSIGNED'}</span>
+            </span>
+            <span className="tag-mono px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 flex items-center space-x-1.5 shadow-inner">
+              <BookOpen className="w-3.5 h-3.5 text-rose-400" />
+              <span>BATCH: {userProfile?.batch || 'ICT-CORE'}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Detail Matrix */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-800 text-xs">
+          <div>
+            <span className="tag-mono text-[9px] text-slate-500 block">ENROLLMENT STATUS</span>
+            <span className="font-mono font-bold text-emerald-400 flex items-center mt-0.5">
+              <Check className="w-3.5 h-3.5 mr-1" /> VALIDATED
+            </span>
+          </div>
+          <div>
+            <span className="tag-mono text-[9px] text-slate-500 block">SESSIONS RECORDED</span>
+            <span className="font-mono font-bold text-slate-200 mt-0.5 block">
+              {overallSummary.total} Sessions Logged
+            </span>
+          </div>
+          <div>
+            <span className="tag-mono text-[9px] text-slate-500 block">PENDING TASKS</span>
+            <span className="font-mono font-bold text-violet-400 mt-0.5 block">
+              {sortedTasks.length} Vouchers Active
+            </span>
+          </div>
+          <div>
+            <span className="tag-mono text-[9px] text-slate-500 block">UPCOMING TESTS</span>
+            <span className="font-mono font-bold text-rose-400 mt-0.5 block">
+              {upcomingTests.length} Admit Slips
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticket Perforation Divider */}
+      <div className="ticket-perforation-divider bg-slate-950">
+        <div className="ticket-notch-left" />
+        <div className="ticket-dashed-line" />
+        <div className="ticket-notch-right" />
+      </div>
+
+      {/* Bottom Stub Section */}
+      <div className="p-6 bg-slate-900/70 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center space-x-4 w-full sm:w-auto">
+          <div className="ticket-barcode-graphic text-slate-300 w-32 shrink-0" />
+          <div className="min-w-0">
+            <span className="tag-mono text-[8px] text-slate-500 tracking-widest block">
+              UID: {studentId.slice(0, 16)}...
+            </span>
+            <span className="text-[11px] text-slate-400 font-mono">
+              STAND: {isGoodStanding ? 'APPROVED FOR EXAMS' : 'ATTENDANCE DEFICIT'}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-6 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="text-right">
+            <span className="tag-mono text-[8px] text-slate-400 uppercase tracking-widest block">
+              ADMIT PERCENTAGE
+            </span>
+            <span className={`text-4xl font-black font-mono tracking-tight leading-none ${isGoodStanding ? 'text-violet-400' : 'text-rose-400'}`}>
+              {overallSummary.percentage}{isPercentNumeric ? '%' : ''}
+            </span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-center min-w-[70px]">
+            <span className="tag-mono text-[8px] text-slate-400 block">TARGET</span>
+            <span className="tag-mono text-xs font-bold text-emerald-400">75% MIN</span>
           </div>
         </div>
       </div>
     </div>
   );
 
-  // 2. Attendance Status Bento Grid
-  const AttendanceBentoGrid = (
-    <div className="space-y-3">
-      {attendanceError && (
-        <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex items-center space-x-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{attendanceError}</span>
-        </div>
-      )}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
-        {/* Present */}
-        <div className="glass-panel glass-card-interactive p-4 sm:p-5 rounded-3xl flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Present</span>
-            <div className="p-2 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-              {overallSummary.present}
-            </span>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-1.5 font-medium">
-              on-time days
-            </span>
-          </div>
+  /* =========================================================================
+     2. MEETING-CARD CALENDAR DAY STRIP (Inspiration 2)
+     ========================================================================= */
+  const CalendarDayStripCard = (
+    <div className="ticket-pass p-5 bg-slate-900/90 border-violet-500/20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+            <CalendarCheck className="w-4 h-4 text-violet-400" />
+            <span>Weekly Turnout Timeline</span>
+          </h2>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Real-time daily presence markers and session timestamps
+          </p>
         </div>
 
-        {/* Late */}
-        <div className="glass-panel glass-card-interactive p-4 sm:p-5 rounded-3xl flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Late</span>
-            <div className="p-2 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
-              <Clock className="w-4 h-4" />
+        {/* Date Selector Pill (Inspiration 2) */}
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 shadow-inner">
+          <Calendar className="w-3.5 h-3.5 text-violet-400" />
+          <span>{new Date().toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
+        </div>
+      </div>
+
+      {/* The Day Strip */}
+      <div className="meeting-calendar-strip bg-slate-950/80 border border-slate-800 rounded-2xl p-2.5">
+        {weekDays.map((day) => {
+          const isSelected = selectedCalendarDay === day.dateStr;
+          return (
+            <div
+              key={day.dateStr}
+              onClick={() => setSelectedCalendarDay(day.dateStr)}
+              className={`day-pill-wrapper group ${isSelected ? 'day-pill-active' : ''}`}
+            >
+              <div className={`day-pill-num font-mono ${
+                isSelected
+                  ? 'bg-violet-600 text-white font-black'
+                  : 'text-slate-300 group-hover:bg-slate-800'
+              }`}>
+                {day.dayNumber}
+              </div>
+              <div className={`day-pill-name tag-mono ${
+                isSelected
+                  ? 'bg-violet-700 text-white'
+                  : 'text-slate-500 group-hover:bg-slate-800'
+              }`}>
+                {day.dayName}
+              </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Dashed Indicator Connector Timeline (Inspiration 2) */}
+      <div className="calendar-timeline-container my-1">
+        <div className="calendar-timeline-line" />
+        {weekDays.map((day) => {
+          let dotColor = 'bg-slate-700';
+          if (day.status === 'Present') dotColor = 'bg-emerald-400 ring-4 ring-emerald-500/20';
+          else if (day.status === 'Late') dotColor = 'bg-amber-400 ring-4 ring-amber-500/20';
+          else if (day.status === 'Absent') dotColor = 'bg-rose-500 ring-4 ring-rose-500/20';
+          else if (day.status === 'Leave') dotColor = 'bg-sky-400 ring-4 ring-sky-500/20';
+
+          return (
+            <div
+              key={`dot-${day.dateStr}`}
+              className={`calendar-timeline-dot ${dotColor}`}
+              title={`${day.dateStr}: ${day.status || 'No session'}`}
+            />
+          );
+        })}
+      </div>
+
+      {/* Selected Day Info Pill */}
+      {(() => {
+        const activeRecord = attendance.find((a) => a.date === selectedCalendarDay);
+        return (
+          <div className="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="tag-mono text-slate-400">SELECTED: {selectedCalendarDay}</span>
+              {activeRecord ? (
+                <span className={`tag-mono px-2 py-0.5 rounded font-bold ${
+                  activeRecord.status === 'Present'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : activeRecord.status === 'Late'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    : activeRecord.status === 'Absent'
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                }`}>
+                  {activeRecord.status.toUpperCase()}
+                </span>
+              ) : (
+                <span className="tag-mono text-slate-500">NO SESSION RECORDED</span>
+              )}
+            </div>
+
+            {activeRecord && (
+              <div className="tag-mono text-slate-400 flex items-center space-x-3">
+                <span>IN: <strong className="text-slate-200">{activeRecord.inTime || '—'}</strong></span>
+                <span>OUT: <strong className="text-slate-200">{activeRecord.outTime || '—'}</strong></span>
+              </div>
+            )}
           </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-              {overallSummary.late}
-            </span>
-            <span className="text-xs text-amber-600 dark:text-amber-400 ml-1.5 font-medium">
-              delayed days
-            </span>
+        );
+      })()}
+    </div>
+  );
+
+  /* =========================================================================
+     3. ATTENDANCE METRIC CARDS
+     ========================================================================= */
+  const AttendanceMetricCards = (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Present */}
+      <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-emerald-500/20 flex flex-col justify-between">
+        <div className="flex items-center justify-between">
+          <span className="tag-mono text-slate-400">PRESENT DAYS</span>
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
         </div>
+        <div className="mt-3">
+          <span className="text-3xl font-black font-mono text-white">
+            {overallSummary.present}
+          </span>
+          <span className="text-xs text-emerald-400 ml-1.5 font-mono">
+            ON-TIME
+          </span>
+        </div>
+      </div>
 
-        {/* Absent */}
-        <div className="glass-panel glass-card-interactive p-4 sm:p-5 rounded-3xl flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Absent</span>
-            <div className="p-2 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400">
-              <XCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-              {overallSummary.absent}
-            </span>
-            <span className="text-xs text-rose-600 dark:text-rose-400 ml-1.5 font-medium">
-              unexcused
-            </span>
+      {/* Late */}
+      <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-amber-500/20 flex flex-col justify-between">
+        <div className="flex items-center justify-between">
+          <span className="tag-mono text-slate-400">DELAYED DAYS</span>
+          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <Clock className="w-4 h-4" />
           </div>
         </div>
+        <div className="mt-3">
+          <span className="text-3xl font-black font-mono text-white">
+            {overallSummary.late}
+          </span>
+          <span className="text-xs text-amber-400 ml-1.5 font-mono">
+            DELAYED
+          </span>
+        </div>
+      </div>
 
-        {/* Leave */}
-        <div className="glass-panel glass-card-interactive p-4 sm:p-5 rounded-3xl flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Leave</span>
-            <div className="p-2 rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-400">
-              <AlertCircle className="w-4 h-4" />
-            </div>
+      {/* Absent */}
+      <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-rose-500/20 flex flex-col justify-between">
+        <div className="flex items-center justify-between">
+          <span className="tag-mono text-slate-400">UNEXCUSED</span>
+          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <XCircle className="w-4 h-4" />
           </div>
-          <div className="mt-3">
-            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-              {overallSummary.leave}
-            </span>
-            <span className="text-xs text-sky-600 dark:text-sky-400 ml-1.5 font-medium">
-              authorized
-            </span>
+        </div>
+        <div className="mt-3">
+          <span className="text-3xl font-black font-mono text-white">
+            {overallSummary.absent}
+          </span>
+          <span className="text-xs text-rose-400 ml-1.5 font-mono">
+            ABSENT
+          </span>
+        </div>
+      </div>
+
+      {/* Leave */}
+      <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-sky-500/20 flex flex-col justify-between">
+        <div className="flex items-center justify-between">
+          <span className="tag-mono text-slate-400">AUTHORIZED</span>
+          <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <AlertCircle className="w-4 h-4" />
           </div>
+        </div>
+        <div className="mt-3">
+          <span className="text-3xl font-black font-mono text-white">
+            {overallSummary.leave}
+          </span>
+          <span className="text-xs text-sky-400 ml-1.5 font-mono">
+            LEAVE
+          </span>
         </div>
       </div>
     </div>
   );
 
-  // 3. Tasks Card
+  /* =========================================================================
+     4. TASK VOUCHERS (Inspiration 1 & 3)
+     ========================================================================= */
   const TasksSection = (
-    <div className="glass-panel p-5 sm:p-6 rounded-[28px]">
+    <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+          <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
             <CheckSquare className="w-4 h-4" />
           </div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            Coursework Assignments
-          </h2>
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+              Coursework Assignment Vouchers
+            </h2>
+            <span className="tag-mono text-[9px] text-slate-400">ACTIVE PROJECT DELIVERABLES</span>
+          </div>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/70 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-          {sortedTasks.length} active
+        <span className="tag-mono px-2.5 py-1 rounded-md bg-slate-800 text-violet-300 border border-slate-700">
+          {sortedTasks.length} VOUCHERS
         </span>
       </div>
 
       {tasksError ? (
-        <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex items-center space-x-2">
+        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{tasksError}</span>
         </div>
       ) : sortedTasks.length === 0 ? (
-        <div className="text-center py-10 px-4 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800/80">
-          <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-            No tasks yet, enjoy your day!
+        <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50">
+          <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+          <p className="text-xs font-bold text-slate-200">
+            All coursework vouchers completed!
           </p>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-            You have completed all pending coursework and homework.
+          <p className="tag-mono text-[10px] text-slate-500 mt-1">
+            NO PENDING ASSIGNMENTS DETECTED ON MATRIX
           </p>
         </div>
       ) : (
@@ -363,56 +510,47 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
             return (
               <div
                 key={task.id}
-                className={`p-4 rounded-2xl transition-all duration-200 ${
+                className={`p-4 rounded-xl border transition-all ${
                   isOverdue
-                    ? 'bg-rose-500/10 border border-rose-500/30'
+                    ? 'bg-rose-950/20 border-rose-500/40'
                     : isToday
-                    ? 'bg-amber-500/10 border border-amber-500/30'
-                    : 'glass-panel-subtle'
+                    ? 'bg-amber-950/20 border-amber-500/40'
+                    : 'bg-slate-950 border-slate-800 hover:border-violet-500/40'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3
-                      className={`text-xs sm:text-sm font-semibold truncate ${
-                        isOverdue
-                          ? 'text-rose-700 dark:text-rose-300'
-                          : 'text-slate-900 dark:text-white'
-                      }`}
-                    >
+                    <h3 className="text-xs sm:text-sm font-bold text-white truncate">
                       {task.title}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
                       {task.description}
                     </p>
                   </div>
 
-                  {/* Overdue / Due Badge */}
                   <span
-                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center space-x-1 ${
+                    className={`shrink-0 px-2.5 py-1 rounded-md tag-mono text-[10px] font-bold ${
                       isOverdue
-                        ? 'bg-rose-600 text-white animate-pulse shadow-xs'
+                        ? 'bg-rose-600 text-white animate-pulse'
                         : isToday
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                        ? 'bg-amber-500 text-slate-950'
+                        : 'bg-slate-800 text-violet-300 border border-violet-500/30'
                     }`}
                   >
-                    {isOverdue && <AlertCircle className="w-3 h-3 shrink-0" />}
-                    <span>
-                      {isOverdue
-                        ? `OVERDUE (${Math.abs(diffDays)}d)`
-                        : isToday
-                        ? 'Due Today'
-                        : `Due in ${diffDays}d`}
-                    </span>
+                    {isOverdue
+                      ? `OVERDUE ${Math.abs(diffDays)}D`
+                      : isToday
+                      ? 'DUE TODAY'
+                      : `DUE IN ${diffDays}D`}
                   </span>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
                   <span className="flex items-center space-x-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Deadline: {task.dueDate}</span>
+                    <Calendar className="w-3 h-3 text-violet-400" />
+                    <span>DEADLINE: {task.dueDate}</span>
                   </span>
+                  <span className="tag-mono text-slate-500">VC-ID: #{task.id.slice(0, 6)}</span>
                 </div>
               </div>
             );
@@ -422,32 +560,37 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
     </div>
   );
 
-  // 4. Tests Section
+  /* =========================================================================
+     5. TEST ADMIT SLIPS (Inspiration 1)
+     ========================================================================= */
   const TestsSection = (
-    <div className="glass-panel p-5 sm:p-6 rounded-[28px]">
+    <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+          <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
             <FileText className="w-4 h-4" />
           </div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            Upcoming Tests & Exams
-          </h2>
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+              Examination Admit Slips
+            </h2>
+            <span className="tag-mono text-[9px] text-slate-400">UPCOMING EVALUATIONS</span>
+          </div>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/70 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-          {upcomingTests.length} scheduled
+        <span className="tag-mono px-2.5 py-1 rounded-md bg-slate-800 text-violet-300 border border-slate-700">
+          {upcomingTests.length} SLIPS
         </span>
       </div>
 
       {testsError ? (
-        <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex items-center space-x-2">
+        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{testsError}</span>
         </div>
       ) : upcomingTests.length === 0 ? (
-        <div className="text-center py-10 px-4 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800/80">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            No tests scheduled right now. Keep up the good studies!
+        <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50">
+          <p className="text-xs text-slate-400 font-mono">
+            No examination admit slips scheduled. Matrix clear!
           </p>
         </div>
       ) : (
@@ -460,61 +603,53 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
             return (
               <div
                 key={test.id}
-                className="p-4 rounded-2xl glass-panel-subtle hover:bg-white/80 dark:hover:bg-slate-800/70 transition-all duration-200"
+                className="p-4 rounded-xl bg-slate-950 border border-slate-800 hover:border-violet-500/40 transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                      <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 font-bold">
                         {test.type}
                       </span>
-                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="tag-mono text-slate-400">
                         {test.subject}
                       </span>
                     </div>
-                    <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                    <h3 className="text-xs sm:text-sm font-bold text-white truncate">
                       {test.title}
                     </h3>
                   </div>
 
-                  {/* Days remaining badge */}
                   <span
-                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                    className={`shrink-0 px-2.5 py-1 rounded-md tag-mono text-[10px] font-bold ${
                       isToday
-                        ? 'bg-amber-500 text-white animate-pulse'
+                        ? 'bg-amber-500 text-slate-950 animate-pulse'
                         : isTomorrow
                         ? 'bg-sky-500 text-white'
-                        : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
+                        : 'bg-slate-800 text-violet-300 border border-violet-500/30'
                     }`}
                   >
-                    {isToday ? 'Today!' : isTomorrow ? 'Tomorrow' : `${diffDays} days left`}
+                    {isToday ? 'TODAY' : isTomorrow ? 'TOMORROW' : `${diffDays} DAYS`}
                   </span>
                 </div>
 
-                <div className="mt-3 p-2.5 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50 text-xs space-y-1">
-                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                    <span className="flex items-center space-x-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Date:</span>
+                <div className="mt-3 p-2.5 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-4 text-slate-400">
+                    <span className="flex items-center space-x-1 tag-mono">
+                      <Calendar className="w-3.5 h-3.5 text-violet-400" />
+                      <span>{test.date}</span>
                     </span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {test.date}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                    <span className="flex items-center space-x-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Time:</span>
-                    </span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {test.time}
+                    <span className="flex items-center space-x-1 tag-mono">
+                      <Clock className="w-3.5 h-3.5 text-violet-400" />
+                      <span>{test.time}</span>
                     </span>
                   </div>
+                  <span className="tag-mono text-[9px] text-emerald-400">SEAT: ASSIGNED</span>
                 </div>
 
                 {test.syllabus && (
-                  <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 italic">
-                    Syllabus: {test.syllabus}
+                  <p className="mt-2 text-[10px] text-slate-400 line-clamp-1 italic font-mono">
+                    SYLLABUS: {test.syllabus}
                   </p>
                 )}
               </div>
@@ -525,28 +660,29 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
     </div>
   );
 
-  // 5. Attendance History Table
+  /* =========================================================================
+     6. ATTENDANCE HISTORY SECTION
+     ========================================================================= */
   const AttendanceHistorySection = (
-    <div className="glass-panel rounded-[28px] overflow-hidden p-5 sm:p-6">
+    <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
-            <CalendarCheck className="w-4 h-4" />
-          </div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            Your Attendance History
+        <div>
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+            <CalendarCheck className="w-4 h-4 text-violet-400" />
+            <span>Attendance Registry Archive</span>
           </h2>
+          <span className="tag-mono text-[9px] text-slate-400">HISTORICAL BIOMETRIC TIMESTAMPS</span>
         </div>
 
         <div className="flex items-center space-x-3 text-xs">
-          <label className="flex items-center space-x-2 cursor-pointer font-medium text-slate-600 dark:text-slate-400">
+          <label className="flex items-center space-x-2 cursor-pointer tag-mono text-slate-300">
             <input
               type="checkbox"
               checked={viewAllMonths}
               onChange={(e) => setViewAllMonths(e.target.checked)}
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-slate-700 bg-slate-900 text-violet-600 focus:ring-violet-500"
             />
-            <span>View All History</span>
+            <span>SHOW ALL ARCHIVES</span>
           </label>
 
           {!viewAllMonths && (
@@ -554,128 +690,80 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-indigo-500/20 font-semibold text-xs"
+              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-950 text-slate-200 font-mono text-xs outline-hidden focus:border-violet-500"
             />
           )}
         </div>
       </div>
 
       {attendanceError ? (
-        <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex items-center space-x-2">
+        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{attendanceError}</span>
         </div>
       ) : filteredAttendance.length === 0 ? (
-        <div className="text-center py-12 px-4 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
-          No attendance records logged for this selected duration.
+        <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 text-xs text-slate-500 font-mono">
+          NO TIMESTAMPS LOGGED FOR THIS PERIOD.
         </div>
       ) : (
-        <>
-          {/* Mobile View: Clean Glass Cards (< md) */}
-          <div className="md:hidden space-y-3">
-            {filteredAttendance.map((rec) => (
-              <div
-                key={rec.id}
-                className="p-4 rounded-2xl glass-panel-subtle space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider tag-mono">
+                <th className="py-3 px-4">TIMESTAMP</th>
+                <th className="py-3 px-4">STATUS</th>
+                <th className="py-3 px-4">GATE IN</th>
+                <th className="py-3 px-4">GATE OUT</th>
+                <th className="py-3 px-4">INSTRUCTOR LOG</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60 font-mono">
+              {filteredAttendance.map((rec) => (
+                <tr
+                  key={rec.id}
+                  className="hover:bg-slate-800/40 transition-colors"
+                >
+                  <td className="py-3 px-4 font-bold text-slate-200">
                     {rec.date}
-                  </span>
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      rec.status === 'Present'
-                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                        : rec.status === 'Late'
-                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
-                        : rec.status === 'Absent'
-                        ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
-                        : 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20'
-                    }`}
-                  >
-                    {rec.status}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-                  <div>
-                    <span>In: </span>
-                    <strong className="text-slate-800 dark:text-slate-200">{rec.inTime || '—'}</strong>
-                  </div>
-                  <div>
-                    <span>Out: </span>
-                    <strong className="text-slate-800 dark:text-slate-200">{rec.outTime || '—'}</strong>
-                  </div>
-                </div>
-
-                {rec.notes && (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 italic pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
-                    Remarks: {rec.notes}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop View: Glass Table (md+) */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200/60 dark:border-slate-800/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">In-Time</th>
-                  <th className="py-3 px-4">Out-Time</th>
-                  <th className="py-3 px-4">Instructor Remarks</th>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold tag-mono ${
+                        rec.status === 'Present'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : rec.status === 'Late'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : rec.status === 'Absent'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                      }`}
+                    >
+                      {rec.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-slate-300">{rec.inTime || '—'}</td>
+                  <td className="py-3 px-4 text-slate-300">{rec.outTime || '—'}</td>
+                  <td className="py-3 px-4 text-slate-500 italic">
+                    {rec.notes || '—'}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40">
-                {filteredAttendance.map((rec) => (
-                  <tr
-                    key={rec.id}
-                    className="hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="py-3 px-4 font-mono font-medium text-slate-800 dark:text-slate-200">
-                      {rec.date}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          rec.status === 'Present'
-                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                            : rec.status === 'Late'
-                            ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
-                            : rec.status === 'Absent'
-                            ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
-                            : 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20'
-                        }`}
-                      >
-                        {rec.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{rec.inTime || '—'}</td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{rec.outTime || '—'}</td>
-                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 italic">
-                      {rec.notes || '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 
   /* =========================================================================
-     RENDER BASED ON CURRENT TAB
+     TAB ROUTING
      ========================================================================= */
 
   if (currentTab === 'attendance') {
     return (
       <div className="space-y-6">
-        {AttendanceBentoGrid}
+        {CalendarDayStripCard}
+        {AttendanceMetricCards}
         {AttendanceHistorySection}
       </div>
     );
@@ -697,11 +785,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
     );
   }
 
-  // Default: 'dashboard' overview
+  // Default: Dashboard Overview
   return (
     <div className="space-y-6">
-      {WelcomeCard}
-      {AttendanceBentoGrid}
+      {StudentBoardingPass}
+      {CalendarDayStripCard}
+      {AttendanceMetricCards}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {TasksSection}
         {TestsSection}

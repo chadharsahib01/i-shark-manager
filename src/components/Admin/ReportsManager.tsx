@@ -11,7 +11,8 @@ import {
   Clock,
   XCircle,
   AlertCircle,
-  Percent
+  Percent,
+  Sparkles
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import {
@@ -145,7 +146,7 @@ export const ReportsManager: React.FC = () => {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     const studentTag = selectedStudentId === 'all' ? 'all-students' : currentStudent?.fullName.replace(/\s+/g, '_') || 'student';
-    link.setAttribute('download', `attendance_report_${selectedMonth}_${studentTag}.csv`);
+    link.setAttribute('download', `attendance_audit_${selectedMonth}_${studentTag}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -161,35 +162,35 @@ export const ReportsManager: React.FC = () => {
     }
 
     const doc = new jsPDF();
-    const title = 'I-SHARK Institute of Computer Technologies - Attendance Report';
-    const subTitle = `Report Period: ${selectedMonth} | Scope: ${
+    const title = 'I-SHARK Institute of Computer Technologies - Attendance Audit';
+    const subTitle = `Period: ${selectedMonth} | Target Scope: ${
       selectedStudentId === 'all' ? 'All Active Students' : currentStudent?.fullName
     }`;
 
     // Header styling
-    doc.setFontSize(16);
+    doc.setFontSize(15);
     doc.setTextColor(30, 41, 59);
     doc.text(title, 14, 20);
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(100, 116, 139);
-    doc.text(subTitle, 14, 28);
-    doc.text(`Generated On: ${new Date().toLocaleString()}`, 14, 34);
+    doc.text(subTitle, 14, 27);
+    doc.text(`Generated On: ${new Date().toLocaleString()}`, 14, 33);
 
     // Summary Box
     doc.setFillColor(248, 250, 252);
-    doc.roundedRect(14, 40, 182, 24, 3, 3, 'F');
+    doc.roundedRect(14, 38, 182, 24, 3, 3, 'F');
     doc.setFontSize(9);
     doc.setTextColor(51, 65, 85);
 
-    doc.text(`Total Sessions: ${summary.total}`, 20, 48);
-    doc.text(`Present: ${summary.present}`, 65, 48);
-    doc.text(`Late: ${summary.late}`, 110, 48);
-    doc.text(`Absent: ${summary.absent}`, 150, 48);
+    doc.text(`Total Sessions: ${summary.total}`, 20, 46);
+    doc.text(`Present: ${summary.present}`, 65, 46);
+    doc.text(`Late: ${summary.late}`, 110, 46);
+    doc.text(`Absent: ${summary.absent}`, 150, 46);
 
     doc.setFontSize(11);
-    doc.setTextColor(79, 70, 229);
-    doc.text(`Overall Attendance Rate: ${summary.percentage}%`, 20, 58);
+    doc.setTextColor(124, 58, 237);
+    doc.text(`Attendance Percentage: ${summary.percentage}%`, 20, 56);
 
     // Records Table Header
     let y = 72;
@@ -205,7 +206,6 @@ export const ReportsManager: React.FC = () => {
 
     y += 8;
 
-    // Table rows (with pagination support)
     filteredRecords.slice(0, 50).forEach((rec) => {
       if (y > 275) {
         doc.addPage();
@@ -222,94 +222,103 @@ export const ReportsManager: React.FC = () => {
     });
 
     if (filteredRecords.length > 50) {
-      doc.text(`... and ${filteredRecords.length - 50} more records (truncated for summary PDF)`, 16, y + 4);
+      doc.text(`... and ${filteredRecords.length - 50} more records (truncated in summary print)`, 16, y + 4);
     }
 
     const studentTag = selectedStudentId === 'all' ? 'all_students' : currentStudent?.fullName.replace(/\s+/g, '_') || 'student';
-    doc.save(`attendance_report_${selectedMonth}_${studentTag}.pdf`);
+    doc.save(`attendance_audit_${selectedMonth}_${studentTag}.pdf`);
   };
 
-  const getStatusDotColor = (status: AttendanceStatus) => {
+  const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'Present':
-        return 'bg-emerald-500 text-white';
+        return 'bg-emerald-500 text-slate-950 font-bold';
       case 'Late':
-        return 'bg-amber-500 text-white';
+        return 'bg-amber-500 text-slate-950 font-bold';
       case 'Absent':
-        return 'bg-rose-500 text-white';
+        return 'bg-rose-600 text-white font-bold';
       case 'Leave':
-        return 'bg-sky-500 text-white';
+        return 'bg-sky-500 text-slate-950 font-bold';
       default:
-        return 'bg-slate-300 text-slate-700';
+        return 'bg-slate-800 text-slate-400';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header & Export Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-            <BarChart3 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            <span>Attendance Reports & Analytics</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Filter monthly records by student, analyze percentages, calendar view, and export to PDF/CSV.
-          </p>
-        </div>
+      <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center space-x-2 mb-1.5">
+              <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
+                <Sparkles className="w-3 h-3 text-violet-400" />
+                <span>AUDIT MATRIX // TELEMETRY</span>
+              </span>
+              <span className="tag-mono text-[9px] text-slate-500">ANALYTICS</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center space-x-2">
+              <BarChart3 className="w-6 h-6 text-violet-400" />
+              <span>Attendance Reports & Analytics</span>
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              Monthly audit reports, turnout rate analysis, candidate breakdown, and CSV/PDF ledger export.
+            </p>
+          </div>
 
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={exportToCSV}
-            id="btn-export-csv"
-            disabled={filteredRecords.length === 0}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-xs transition flex items-center space-x-1.5 disabled:opacity-40"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>Export CSV</span>
-          </button>
+          <div className="flex items-center space-x-2 self-start sm:self-auto">
+            <button
+              onClick={exportToCSV}
+              id="btn-export-csv"
+              disabled={filteredRecords.length === 0}
+              className="p-2 sm:px-3 sm:py-2 rounded-xl tag-mono text-xs font-bold bg-slate-950 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center space-x-1.5 disabled:opacity-40 btn-tactile cursor-pointer"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <span className="hidden sm:inline">EXPORT CSV</span>
+            </button>
 
-          <button
-            onClick={exportToPDF}
-            id="btn-export-pdf"
-            disabled={filteredRecords.length === 0}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs shadow-indigo-600/20 transition flex items-center space-x-1.5 disabled:opacity-40"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export PDF</span>
-          </button>
+            <button
+              onClick={exportToPDF}
+              id="btn-export-pdf"
+              disabled={filteredRecords.length === 0}
+              className="glow-orb-btn py-2 px-3 sm:px-4 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 transition flex items-center space-x-1.5 disabled:opacity-40 cursor-pointer shadow-lg shadow-violet-900/40 uppercase"
+            >
+              <Download className="w-4 h-4" />
+              <span>EXPORT PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="p-4 rounded-2xl glass-panel shadow-xs flex flex-col sm:flex-row items-center gap-4">
+      <div className="ticket-pass p-4 bg-slate-900/90 border-violet-500/20 flex flex-col sm:flex-row items-center gap-4">
         {/* Month Selector */}
         <div className="w-full sm:w-auto flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-indigo-500 shrink-0" />
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Month:</span>
+          <Calendar className="w-4 h-4 text-violet-400 shrink-0" />
+          <span className="tag-mono text-xs text-slate-400">AUDIT MONTH:</span>
           <input
             type="month"
             id="report-month-select"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-1.5 text-xs font-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-white outline-hidden focus:border-violet-500 cursor-pointer"
           />
         </div>
 
         {/* Student Selector */}
         <div className="w-full sm:flex-1 flex items-center space-x-2">
-          <Users className="w-4 h-4 text-indigo-500 shrink-0" />
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Student:</span>
+          <Users className="w-4 h-4 text-violet-400 shrink-0" />
+          <span className="tag-mono text-xs text-slate-400">ROSTER FILTER:</span>
           <select
             id="report-student-select"
             value={selectedStudentId}
             onChange={(e) => setSelectedStudentId(e.target.value)}
-            className="w-full sm:max-w-xs px-3 py-1.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-indigo-500"
+            className="w-full sm:max-w-xs px-3 py-1.5 text-xs tag-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-white outline-hidden focus:border-violet-500"
           >
-            <option value="all">All Students ({students.length})</option>
+            <option value="all">ALL ENROLLED STUDENTS ({students.length})</option>
             {students.map((st) => (
               <option key={st.id} value={st.id}>
-                {st.fullName} {st.rollNumber ? `(${st.rollNumber})` : ''}
+                {st.fullName.toUpperCase()} {st.rollNumber ? `(${st.rollNumber})` : ''}
               </option>
             ))}
           </select>
@@ -318,93 +327,93 @@ export const ReportsManager: React.FC = () => {
 
       {/* Metrics Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-4 rounded-2xl glass-panel border-indigo-200/50 dark:border-indigo-800/50">
-          <span className="text-[11px] font-medium text-indigo-800 dark:text-indigo-300 flex items-center space-x-1">
-            <Percent className="w-3.5 h-3.5" />
-            <span>Attendance %</span>
+        <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-violet-500/30">
+          <span className="tag-mono text-violet-300 flex items-center space-x-1 font-bold">
+            <Percent className="w-3.5 h-3.5 text-violet-400" />
+            <span>ATTENDANCE %</span>
           </span>
-          <div className="text-2xl font-bold text-indigo-950 dark:text-white mt-1">
+          <div className="text-2xl font-black font-mono text-white mt-1">
             {summary.percentage}%
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl glass-panel">
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Total Records</span>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{summary.total}</div>
+        <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-slate-800">
+          <span className="tag-mono text-slate-400 font-bold">TOTAL LOGS</span>
+          <div className="text-2xl font-black font-mono text-white mt-1">{summary.total}</div>
         </div>
 
-        <div className="p-4 rounded-2xl glass-panel border-emerald-200/40 dark:border-emerald-900/40">
-          <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 flex items-center space-x-1">
+        <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-emerald-500/30">
+          <span className="tag-mono text-emerald-400 flex items-center space-x-1 font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Present</span>
+            <span>PRESENT</span>
           </span>
-          <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-200 mt-1">{summary.present}</div>
+          <div className="text-2xl font-black font-mono text-emerald-300 mt-1">{summary.present}</div>
         </div>
 
-        <div className="p-4 rounded-2xl glass-panel border-amber-200/40 dark:border-amber-900/40">
-          <span className="text-[11px] font-medium text-amber-700 dark:text-amber-400 flex items-center space-x-1">
+        <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-amber-500/30">
+          <span className="tag-mono text-amber-400 flex items-center space-x-1 font-bold">
             <Clock className="w-3.5 h-3.5" />
-            <span>Late</span>
+            <span>LATE</span>
           </span>
-          <div className="text-2xl font-bold text-amber-900 dark:text-amber-200 mt-1">{summary.late}</div>
+          <div className="text-2xl font-black font-mono text-amber-300 mt-1">{summary.late}</div>
         </div>
 
-        <div className="p-4 rounded-2xl glass-panel border-rose-200/40 dark:border-rose-900/40">
-          <span className="text-[11px] font-medium text-rose-700 dark:text-rose-400 flex items-center space-x-1">
+        <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-rose-500/30">
+          <span className="tag-mono text-rose-400 flex items-center space-x-1 font-bold">
             <XCircle className="w-3.5 h-3.5" />
-            <span>Absent</span>
+            <span>ABSENT</span>
           </span>
-          <div className="text-2xl font-bold text-rose-900 dark:text-rose-200 mt-1">{summary.absent}</div>
+          <div className="text-2xl font-black font-mono text-rose-300 mt-1">{summary.absent}</div>
         </div>
 
-        <div className="p-4 rounded-2xl glass-panel border-sky-200/40 dark:border-sky-900/40">
-          <span className="text-[11px] font-medium text-sky-700 dark:text-sky-400 flex items-center space-x-1">
+        <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-sky-500/30">
+          <span className="tag-mono text-sky-400 flex items-center space-x-1 font-bold">
             <AlertCircle className="w-3.5 h-3.5" />
-            <span>Leave</span>
+            <span>LEAVE</span>
           </span>
-          <div className="text-2xl font-bold text-sky-900 dark:text-sky-200 mt-1">{summary.leave}</div>
+          <div className="text-2xl font-black font-mono text-sky-300 mt-1">{summary.leave}</div>
         </div>
       </div>
 
       {/* Calendar-Style Monthly View */}
-      <div className="p-5 rounded-3xl glass-panel shadow-sm">
+      <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-            <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-violet-400" />
             <span>
-              Calendar Matrix: {selectedMonth}
-              {currentStudent ? ` — ${currentStudent.fullName}` : ' (All Students)'}
+              Monthly Matrix: {selectedMonth}
+              {currentStudent ? ` — ${currentStudent.fullName}` : ' (Cohort Aggregate)'}
             </span>
           </h2>
-          <div className="hidden sm:flex items-center space-x-3 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="hidden sm:flex items-center space-x-3 tag-mono text-[9px] text-slate-400 font-bold">
             <span className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Present</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>PRESENT</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span>Late</span>
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span>LATE</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-              <span>Absent</span>
+              <span className="w-2 h-2 rounded-full bg-rose-400" />
+              <span>ABSENT</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-sky-500"></span>
-              <span>Leave</span>
+              <span className="w-2 h-2 rounded-full bg-sky-400" />
+              <span>LEAVE</span>
             </span>
           </div>
         </div>
 
         {/* Days of Week Header */}
-        <div className="grid grid-cols-7 gap-1 text-center font-semibold text-[11px] text-slate-400 mb-1">
-          <div>Sun</div>
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div>Sat</div>
+        <div className="grid grid-cols-7 gap-1 text-center tag-mono text-[10px] text-slate-500 font-bold mb-1">
+          <div>SUN</div>
+          <div>MON</div>
+          <div>TUE</div>
+          <div>WED</div>
+          <div>THU</div>
+          <div>FRI</div>
+          <div>SAT</div>
         </div>
 
         {/* Calendar Grid Cells */}
@@ -414,7 +423,7 @@ export const ReportsManager: React.FC = () => {
               return (
                 <div
                   key={`empty-${idx}`}
-                  className="min-h-[72px] rounded-lg bg-slate-50/40 dark:bg-slate-800/20 border border-transparent"
+                  className="min-h-[72px] rounded-lg bg-slate-950/40 border border-slate-900/40"
                 />
               );
             }
@@ -426,16 +435,16 @@ export const ReportsManager: React.FC = () => {
                 key={item.dateStr}
                 className={`min-h-[72px] p-2 rounded-lg border transition flex flex-col justify-between ${
                   hasRecords
-                    ? 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
-                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/60'
+                    ? 'bg-slate-950 border-slate-800'
+                    : 'bg-slate-950/40 border-slate-900'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="font-mono text-xs font-bold text-slate-200">
                     {item.dayNumber}
                   </span>
                   {hasRecords && (
-                    <span className="text-[10px] text-slate-400">
+                    <span className="tag-mono text-[9px] text-violet-400 font-bold">
                       {item.records.length} logs
                     </span>
                   )}
@@ -447,35 +456,35 @@ export const ReportsManager: React.FC = () => {
                     item.records.map((rec) => (
                       <div
                         key={rec.id}
-                        className={`text-[10px] font-medium px-1.5 py-0.5 rounded-sm flex items-center justify-between ${getStatusDotColor(
+                        className={`text-[9px] tag-mono px-1.5 py-0.5 rounded-sm flex items-center justify-between ${getStatusBadge(
                           rec.status
                         )}`}
                       >
-                        <span>{rec.status}</span>
-                        {rec.inTime && <span className="text-[9px] opacity-90">{rec.inTime}</span>}
+                        <span>{rec.status.toUpperCase()}</span>
+                        {rec.inTime && <span className="text-[8px] opacity-80">{rec.inTime}</span>}
                       </div>
                     ))
                   ) : (
                     // All Students aggregated summary dots
                     <div className="flex flex-wrap gap-1">
-                      {item.records.slice(0, 5).map((rec) => (
+                      {item.records.slice(0, 6).map((rec) => (
                         <span
                           key={rec.id}
                           title={`${rec.studentName}: ${rec.status} (${rec.inTime || 'N/A'})`}
                           className={`w-2 h-2 rounded-full ${
                             rec.status === 'Present'
-                              ? 'bg-emerald-500'
+                              ? 'bg-emerald-400'
                               : rec.status === 'Late'
-                              ? 'bg-amber-500'
+                              ? 'bg-amber-400'
                               : rec.status === 'Absent'
                               ? 'bg-rose-500'
-                              : 'bg-sky-500'
+                              : 'bg-sky-400'
                           }`}
                         />
                       ))}
-                      {item.records.length > 5 && (
-                        <span className="text-[9px] text-slate-400">
-                          +{item.records.length - 5}
+                      {item.records.length > 6 && (
+                        <span className="tag-mono text-[8px] text-slate-400">
+                          +{item.records.length - 6}
                         </span>
                       )}
                     </div>
@@ -488,61 +497,61 @@ export const ReportsManager: React.FC = () => {
       </div>
 
       {/* Detailed Table View */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-            Detailed Log Records ({filteredRecords.length})
+      <div className="ticket-pass p-0 bg-slate-900/90 border-violet-500/20 overflow-hidden">
+        <div className="p-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
+          <h3 className="text-xs font-bold text-white uppercase tag-mono">
+            Detailed Dispatch Records ({filteredRecords.length})
           </h3>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredRecords.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-400">
-            No attendance records found for this month and student filter.
+          <div className="p-8 text-center tag-mono text-xs text-slate-500">
+            No attendance entries logged for this month and roster scope.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Student</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">In-Time</th>
-                  <th className="py-3 px-4">Out-Time</th>
-                  <th className="py-3 px-4">Notes</th>
+                <tr className="border-b border-slate-800 bg-slate-950/60 text-[10px] font-bold text-slate-400 uppercase tag-mono">
+                  <th className="py-3 px-4">DATE</th>
+                  <th className="py-3 px-4">STUDENT CANDIDATE</th>
+                  <th className="py-3 px-4">STATUS</th>
+                  <th className="py-3 px-4">GATE IN</th>
+                  <th className="py-3 px-4">GATE OUT</th>
+                  <th className="py-3 px-4">NOTES / REMARKS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className="divide-y divide-slate-800/60 font-mono">
                 {filteredRecords.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td className="py-3 px-4 font-mono font-medium text-slate-800 dark:text-slate-200">
+                  <tr key={r.id} className="hover:bg-slate-800/40 transition">
+                    <td className="py-3 px-4 text-violet-300 font-bold">
                       {r.date}
                     </td>
-                    <td className="py-3 px-4 font-medium text-slate-900 dark:text-white">
+                    <td className="py-3 px-4 font-sans font-bold text-white">
                       {r.studentName}
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold tag-mono ${
                           r.status === 'Present'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                             : r.status === 'Late'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                             : r.status === 'Absent'
-                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                            : 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                         }`}
                       >
-                        {r.status}
+                        {r.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{r.inTime || '-'}</td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{r.outTime || '-'}</td>
-                    <td className="py-3 px-4 text-slate-500 italic max-w-xs truncate">{r.notes || '-'}</td>
+                    <td className="py-3 px-4 text-slate-300">{r.inTime || '—'}</td>
+                    <td className="py-3 px-4 text-slate-300">{r.outTime || '—'}</td>
+                    <td className="py-3 px-4 text-slate-400 italic max-w-xs truncate">{r.notes || '—'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -10,7 +10,8 @@ import {
   Trash2,
   AlertCircle,
   CheckCircle2,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { TestItem, TestType, UserProfile } from '../../types';
 import {
@@ -93,7 +94,7 @@ export const TestsManager: React.FC = () => {
         createdBy: currentUser?.uid || 'admin'
       });
 
-      setToastMessage('Test schedule created successfully.');
+      setToastMessage('Evaluation admit slip scheduled and issued.');
       setTimeout(() => setToastMessage(null), 3000);
 
       // Reset
@@ -105,7 +106,7 @@ export const TestsManager: React.FC = () => {
       setCreateModalOpen(false);
       await fetchTestsAndStudents();
     } catch (err: any) {
-      setFormError(err.message || 'Failed to create test.');
+      setFormError(err.message || 'Failed to create test schedule.');
     } finally {
       setIsSubmitting(false);
     }
@@ -148,7 +149,7 @@ export const TestsManager: React.FC = () => {
         assignedStudentIds: assignedTo === 'selected' ? selectedStudentIds : []
       });
 
-      setToastMessage('Test schedule updated successfully.');
+      setToastMessage('Evaluation admit schedule updated.');
       setTimeout(() => setToastMessage(null), 3000);
       setEditModalOpen(false);
       await fetchTestsAndStudents();
@@ -164,7 +165,7 @@ export const TestsManager: React.FC = () => {
     setIsSubmitting(true);
     try {
       await deleteTest(selectedTest.id);
-      setToastMessage('Test schedule deleted successfully.');
+      setToastMessage('Evaluation admit slip canceled.');
       setTimeout(() => setToastMessage(null), 3000);
       setDeleteModalOpen(false);
       await fetchTestsAndStudents();
@@ -190,28 +191,28 @@ export const TestsManager: React.FC = () => {
 
     if (diffDays < 0) {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-          Completed ({Math.abs(diffDays)}d ago)
+        <span className="tag-mono px-2 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+          CONCLUDED ({Math.abs(diffDays)}D AGO)
         </span>
       );
     }
     if (diffDays === 0) {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 animate-pulse">
-          Today
+        <span className="tag-mono px-2 py-0.5 rounded text-[9px] font-bold bg-amber-950/60 text-amber-300 border border-amber-500/40 animate-pulse">
+          EVALUATION TODAY
         </span>
       );
     }
     if (diffDays === 1) {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-          Tomorrow
+        <span className="tag-mono px-2 py-0.5 rounded text-[9px] font-bold bg-sky-950/60 text-sky-300 border border-sky-500/40">
+          TOMORROW
         </span>
       );
     }
     return (
-      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-        In {diffDays} days
+      <span className="tag-mono px-2 py-0.5 rounded text-[9px] font-bold bg-violet-950/60 text-violet-300 border border-violet-500/40">
+        IN {diffDays} DAYS
       </span>
     );
   };
@@ -223,44 +224,53 @@ export const TestsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header and Add Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-            <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            <span>Tests & Quizzes Schedule</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Create examinations, surprise quizzes, subjects, timings, and syllabus coverage.
-          </p>
-        </div>
+      {/* Top Header Card */}
+      <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center space-x-2 mb-1.5">
+              <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
+                <Sparkles className="w-3 h-3 text-violet-400" />
+                <span>EXAMINATION & QUIZ DISPATCH</span>
+              </span>
+              <span className="tag-mono text-[9px] text-slate-500">ASSESSMENTS</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center space-x-2">
+              <FileText className="w-6 h-6 text-violet-400" />
+              <span>Tests & Quizzes Schedule</span>
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              Issue admit slips, examination slots, syllabus mandates, and subject requirements.
+            </p>
+          </div>
 
-        <button
-          onClick={() => {
-            setTitle('');
-            setType('Test');
-            setSubject('');
-            setDate(addDaysLocal(getLocalDateString(), 4));
-            setTime('10:00 AM - 11:30 AM');
-            setSyllabus('');
-            setAssignedTo('all');
-            setSelectedStudentIds([]);
-            setFormError(null);
-            setCreateModalOpen(true);
-          }}
-          id="btn-create-test"
-          className="px-5 py-2.5 rounded-2xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white shadow-md shadow-indigo-600/25 transition flex items-center justify-center space-x-2 cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Schedule New Test</span>
-        </button>
+          <button
+            onClick={() => {
+              setTitle('');
+              setType('Test');
+              setSubject('');
+              setDate(addDaysLocal(getLocalDateString(), 4));
+              setTime('10:00 AM - 11:30 AM');
+              setSyllabus('');
+              setAssignedTo('all');
+              setSelectedStudentIds([]);
+              setFormError(null);
+              setCreateModalOpen(true);
+            }}
+            id="btn-create-test"
+            className="glow-orb-btn px-4 py-2.5 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 flex items-center space-x-2 cursor-pointer shrink-0 shadow-lg shadow-violet-900/40"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="uppercase">Schedule Examination</span>
+          </button>
+        </div>
       </div>
 
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="p-3.5 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center space-x-2 animate-in fade-in shadow-xs">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{toastMessage}</span>
+        <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 flex items-center space-x-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="font-mono font-bold">{toastMessage}</span>
         </div>
       )}
 
@@ -270,10 +280,10 @@ export const TestsManager: React.FC = () => {
           <button
             key={t}
             onClick={() => setFilterType(t)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl tag-mono text-xs font-bold uppercase transition cursor-pointer btn-tactile ${
               filterType === t
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-                : 'glass-panel text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
+                ? 'bg-violet-600 text-white border border-violet-400 shadow-md shadow-violet-900/40'
+                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
             }`}
           >
             {t}
@@ -281,98 +291,122 @@ export const TestsManager: React.FC = () => {
         ))}
       </div>
 
-      {/* Tests Grid */}
+      {/* Tests Grid: Examination Admit Slips */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredTests.length === 0 ? (
-        <div className="text-center py-16 px-4 rounded-3xl glass-panel shadow-sm">
-          <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">No Tests Found</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+        <div className="text-center py-16 px-4 rounded-3xl ticket-pass bg-slate-900/90 border-slate-800 text-slate-400">
+          <FileText className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+          <h3 className="text-sm font-bold text-white uppercase tag-mono">No Scheduled Tests</h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             {filterType !== 'all'
-              ? `No tests match the "${filterType}" category filter.`
-              : 'Schedule your first quiz or examination to notify students.'}
+              ? `No tests match the "${filterType}" category.`
+              : 'Issue an examination admit pass to notify candidates.'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredTests.map((test) => (
             <div
               key={test.id}
-              className="p-5 rounded-3xl glass-panel shadow-xs hover:border-indigo-400/50 dark:hover:border-indigo-500/50 transition flex flex-col justify-between"
+              className="ticket-pass p-0 bg-slate-950 border-violet-500/30 flex flex-col justify-between hover:border-violet-500/60 transition-all duration-300 shadow-xl"
             >
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-indigo-50/90 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
+                    <span className="tag-mono px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-violet-500/20 text-violet-300 border border-violet-500/30">
                       {test.type}
                     </span>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <span className="tag-mono text-[10px] font-bold text-slate-300">
                       {test.subject}
                     </span>
                   </div>
                   {getDaysBadge(test.date)}
                 </div>
 
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">
+                <h3 className="text-sm font-black text-white uppercase tracking-tight mb-3 line-clamp-2">
                   {test.title}
                 </h3>
 
-                <div className="p-3 rounded-2xl bg-white/50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800/70 space-y-1.5 text-xs text-slate-600 dark:text-slate-300 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>
-                      Date: <strong className="text-slate-800 dark:text-white">{test.date}</strong>
+                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5 text-xs text-slate-300 mb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
+                      <Calendar className="w-3 h-3 text-violet-400" />
+                      <span>EXAM DATE:</span>
                     </span>
+                    <span className="font-mono font-bold text-white">{test.date}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>Time: {test.time}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
+                      <Clock className="w-3 h-3 text-amber-400" />
+                      <span>WINDOW:</span>
+                    </span>
+                    <span className="font-mono text-slate-200">{test.time}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>
+                  <div className="flex items-center justify-between">
+                    <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
+                      <Users className="w-3 h-3 text-emerald-400" />
+                      <span>COHORT:</span>
+                    </span>
+                    <span className="tag-mono text-[9px] font-bold text-violet-300">
                       {test.assignedTo === 'all'
-                        ? 'Assigned to All Students'
-                        : `${test.assignedStudentIds?.length || 0} Students`}
+                        ? 'ALL STUDENTS'
+                        : `${test.assignedStudentIds?.length || 0} ADMITTED`}
                     </span>
                   </div>
                 </div>
 
                 {test.syllabus && (
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center space-x-1 mb-1">
-                      <BookOpen className="w-3 h-3 text-slate-400" />
-                      <span>Syllabus:</span>
+                  <div className="text-xs">
+                    <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1 mb-1">
+                      <BookOpen className="w-3 h-3 text-rose-400" />
+                      <span>SYLLABUS COVERAGE:</span>
                     </span>
-                    <p className="text-[11px] line-clamp-3 italic bg-white/40 dark:bg-slate-800/30 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60">
+                    <p className="tag-mono text-[10px] line-clamp-2 text-slate-400 bg-slate-900/50 p-2 rounded-lg border border-slate-800/80">
                       {test.syllabus}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-4 pt-3 border-t border-slate-100/80 dark:border-slate-800/80 flex items-center justify-end space-x-1.5">
-                <button
-                  onClick={() => handleOpenEdit(test)}
-                  className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition cursor-pointer"
-                  title="Edit Test"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedTest(test);
-                    setDeleteModalOpen(true);
-                  }}
-                  className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                  title="Delete Test"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              {/* Perforation Divider */}
+              <div className="ticket-perforation-divider bg-slate-950">
+                <div className="ticket-notch-left" />
+                <div className="ticket-dashed-line" />
+                <div className="ticket-notch-right" />
+              </div>
+
+              {/* Stub Footer Controls */}
+              <div className="p-4 bg-slate-900/80 flex items-center justify-between gap-2">
+                <div className="flex items-center space-x-2">
+                  <div className="ticket-barcode-graphic text-slate-400 w-16" />
+                  <span className="tag-mono text-[8px] text-slate-500">
+                    PASS #{test.id.slice(0, 6)}
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleOpenEdit(test)}
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition btn-tactile text-xs flex items-center space-x-1"
+                    title="Edit Test"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-violet-400" />
+                    <span className="tag-mono text-[10px] font-bold">EDIT</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedTest(test);
+                      setDeleteModalOpen(true);
+                    }}
+                    className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition btn-tactile text-xs"
+                    title="Delete Test"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -381,172 +415,186 @@ export const TestsManager: React.FC = () => {
 
       {/* Create / Edit Modal */}
       {(createModalOpen || editModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in">
-          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[32px] sm:rounded-3xl glass-panel p-6 sm:p-7 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl ticket-pass bg-slate-950 border-violet-500/40 p-6 sm:p-7 shadow-2xl">
             <button
               onClick={() => {
                 setCreateModalOpen(false);
                 setEditModalOpen(false);
               }}
-              className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition cursor-pointer"
+              className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-              {createModalOpen ? 'Schedule New Test / Quiz' : 'Edit Test Schedule'}
+            <h2 className="text-base font-black text-white uppercase tag-mono mb-1">
+              {createModalOpen ? 'Issue Examination Slip' : 'Update Examination Schedule'}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Enter subject, evaluation type, date, duration, and curriculum syllabus.
+            <p className="tag-mono text-[10px] text-slate-400 mb-4">
+              Enter subject, evaluation classification, exam date, and curriculum syllabus.
             </p>
 
             {formError && (
-              <div className="mb-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-start space-x-2">
+              <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{formError}</span>
+                <span className="font-mono">{formError}</span>
               </div>
             )}
 
             <form onSubmit={createModalOpen ? handleCreateTest : handleUpdateTest} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Test Title *
+                <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                  EXAMINATION TITLE *
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Unit 3: Graph Algorithms Quiz"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-hidden"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Evaluation Type *
-                  </label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value as TestType)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-hidden"
-                  >
-                    <option value="Quiz">Quiz</option>
-                    <option value="Test">Test</option>
-                    <option value="Exam">Exam</option>
-                    <option value="Midterm">Midterm</option>
-                    <option value="Final">Final</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Subject / Course *
-                  </label>
+                <div className="inset-field">
                   <input
                     type="text"
                     required
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g. Computer Science"
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-hidden"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Midterm Examination: Computer Architecture"
+                    className="text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Test Date *
+                  <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                    EVALUATION TYPE *
                   </label>
-                  <input
-                    type="date"
-                    required
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-hidden cursor-pointer"
-                  />
+                  <div className="inset-field">
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value as TestType)}
+                      className="text-xs bg-slate-950 text-slate-200 outline-hidden w-full cursor-pointer"
+                    >
+                      <option value="Quiz">Quiz</option>
+                      <option value="Test">Test</option>
+                      <option value="Exam">Exam</option>
+                      <option value="Midterm">Midterm</option>
+                      <option value="Final">Final</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Time / Duration *
+                  <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                    SUBJECT / DISCIPLINE *
                   </label>
-                  <input
-                    type="text"
+                  <div className="inset-field">
+                    <input
+                      type="text"
+                      required
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="e.g. Computer Science"
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                    DATE *
+                  </label>
+                  <div className="inset-field">
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="text-xs font-mono cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                    TIME / DURATION *
+                  </label>
+                  <div className="inset-field">
+                    <input
+                      type="text"
+                      required
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      placeholder="e.g. 10:00 AM - 11:30 AM"
+                      className="text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                  SYLLABUS & CURRICULUM SCOPE *
+                </label>
+                <div className="inset-field">
+                  <textarea
                     required
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    placeholder="e.g. 10:00 AM - 11:30 AM"
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-hidden"
+                    rows={3}
+                    value={syllabus}
+                    onChange={(e) => setSyllabus(e.target.value)}
+                    placeholder="Specify modules, chapters, and required calculation gear..."
+                    className="text-xs w-full bg-transparent outline-hidden text-slate-100 placeholder:text-slate-600 resize-none font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Syllabus & Topics Covered *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={syllabus}
-                  onChange={(e) => setSyllabus(e.target.value)}
-                  placeholder="Topics, chapters, and allowed reference materials..."
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-hidden"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Assign To
+                <label className="block tag-mono text-[10px] text-slate-400 mb-1">
+                  TARGET ADMIT ALLOCATION
                 </label>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
                     type="button"
                     onClick={() => setAssignedTo('all')}
-                    className={`py-2 px-3 text-xs font-semibold rounded-xl border transition cursor-pointer ${
+                    className={`py-2 px-3 text-xs tag-mono font-bold rounded-xl border transition cursor-pointer btn-tactile ${
                       assignedTo === 'all'
-                        ? 'bg-indigo-50/90 dark:bg-indigo-950/80 border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                        : 'border-slate-200/80 dark:border-slate-700/80 bg-white/40 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400'
+                        ? 'bg-violet-600 text-white border-violet-400 shadow-md shadow-violet-900/40'
+                        : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
                     }`}
                   >
-                    All Students
+                    ALL ENROLLED STUDENTS
                   </button>
                   <button
                     type="button"
                     onClick={() => setAssignedTo('selected')}
-                    className={`py-2 px-3 text-xs font-semibold rounded-xl border transition cursor-pointer ${
+                    className={`py-2 px-3 text-xs tag-mono font-bold rounded-xl border transition cursor-pointer btn-tactile ${
                       assignedTo === 'selected'
-                        ? 'bg-indigo-50/90 dark:bg-indigo-950/80 border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                        : 'border-slate-200/80 dark:border-slate-700/80 bg-white/40 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400'
+                        ? 'bg-violet-600 text-white border-violet-400 shadow-md shadow-violet-900/40'
+                        : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
                     }`}
                   >
-                    Selected Students ({selectedStudentIds.length})
+                    SPECIFIED CANDIDATES ({selectedStudentIds.length})
                   </button>
                 </div>
 
                 {assignedTo === 'selected' && (
-                  <div className="max-h-40 overflow-y-auto border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-2 space-y-1 bg-white/50 dark:bg-slate-800/40">
+                  <div className="max-h-44 overflow-y-auto border border-slate-800 rounded-xl p-2 space-y-1 bg-slate-950">
                     {students.length === 0 ? (
-                      <p className="text-xs text-slate-400 p-2">No active students found.</p>
+                      <p className="tag-mono text-xs text-slate-500 p-2">No active students available.</p>
                     ) : (
                       students.map((st) => (
                         <label
                           key={st.id}
-                          className="flex items-center space-x-2 text-xs p-2 rounded-xl hover:bg-slate-100/70 dark:hover:bg-slate-700/50 cursor-pointer"
+                          className="flex items-center space-x-2 text-xs p-2 rounded-lg hover:bg-slate-900 cursor-pointer"
                         >
                           <input
                             type="checkbox"
                             checked={selectedStudentIds.includes(st.id)}
                             onChange={() => toggleStudentSelection(st.id)}
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            className="rounded border-slate-700 bg-slate-900 text-violet-600 focus:ring-violet-500"
                           />
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="font-bold text-white">
                             {st.fullName}
                           </span>
-                          <span className="text-[11px] text-slate-400">({st.rollNumber || st.email})</span>
+                          <span className="tag-mono text-[10px] text-slate-400">
+                            ({st.rollNumber || st.email})
+                          </span>
                         </label>
                       ))
                     )}
@@ -554,23 +602,23 @@ export const TestsManager: React.FC = () => {
                 )}
               </div>
 
-              <div className="pt-3 flex justify-end space-x-2">
+              <div className="pt-3 flex justify-end space-x-2 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => {
                     setCreateModalOpen(false);
                     setEditModalOpen(false);
                   }}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl tag-mono text-xs font-bold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 transition cursor-pointer"
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white shadow-md shadow-indigo-600/25 disabled:opacity-50 transition cursor-pointer"
+                  className="glow-orb-btn px-5 py-2 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 disabled:opacity-50 transition cursor-pointer uppercase shadow-lg shadow-violet-900/40"
                 >
-                  {isSubmitting ? 'Saving...' : createModalOpen ? 'Schedule Test' : 'Save Changes'}
+                  {isSubmitting ? 'DISPATCHING...' : createModalOpen ? 'ISSUE ADMIT PASS' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>
@@ -578,27 +626,27 @@ export const TestsManager: React.FC = () => {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {/* Delete Confirmation Modal */}
       {deleteModalOpen && selectedTest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-sm rounded-3xl glass-panel p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">Delete Test</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-5">
-              Are you sure you want to delete <strong>"{selectedTest.title}"</strong>?
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-sm rounded-2xl ticket-pass bg-slate-950 border-rose-500/40 p-6 shadow-2xl">
+            <h3 className="text-sm font-bold text-white uppercase tag-mono mb-2">Delete Examination Slip</h3>
+            <p className="tag-mono text-xs text-slate-400 mb-5 leading-relaxed">
+              Confirm cancellation and purge of admit pass <strong>"{selectedTest.title}"</strong>?
             </p>
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition cursor-pointer"
+                className="px-4 py-2 tag-mono text-xs font-bold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-xl transition cursor-pointer"
               >
-                Cancel
+                CANCEL
               </button>
               <button
                 onClick={handleDeleteTest}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-xs font-semibold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-sm disabled:opacity-50 transition cursor-pointer"
+                className="px-4 py-2 tag-mono text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-md disabled:opacity-50 transition cursor-pointer"
               >
-                {isSubmitting ? 'Deleting...' : 'Delete'}
+                {isSubmitting ? 'CANCELED...' : 'CONFIRM PURGE'}
               </button>
             </div>
           </div>
