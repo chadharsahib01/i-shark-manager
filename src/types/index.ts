@@ -71,3 +71,24 @@ export interface AttendanceSummary {
   leave: number;
   percentage: number | string;
 }
+
+export interface MonthlyAttendanceMetric {
+  month: string; // YYYY-MM
+  monthName: string; // e.g. "October 2026"
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+  leave: number;
+  percentage: number | string;
+}
+
+export interface SingleStudentReportData {
+  student: UserProfile;
+  summary: AttendanceSummary;
+  attendanceHistory: AttendanceRecord[];
+  monthlyMetrics: MonthlyAttendanceMetric[];
+  tasks: TaskItem[];
+  tests: TestItem[];
+}
+

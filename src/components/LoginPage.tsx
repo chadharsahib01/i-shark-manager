@@ -40,7 +40,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
     clearError();
 
     if (!email.trim() || !password) {
-      setLocalMessage('Please provide your academic email and authentication key.');
+      setLocalMessage('Please provide your email address and password.');
       return;
     }
 
@@ -50,11 +50,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
     } catch (err: any) {
       const code = err?.code || '';
       if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-        setLocalMessage('Invalid academic credentials. Please verify your email and password.');
+        setLocalMessage('Invalid email or password. Please verify your credentials.');
       } else if (code === 'auth/too-many-requests') {
-        setLocalMessage('Too many attempts. Rate limit engaged. Please try again shortly.');
+        setLocalMessage('Too many attempts. Please try again shortly.');
       } else if (code === 'auth/invalid-email') {
-        setLocalMessage('Invalid format. Please enter an authorized institute email address.');
+        setLocalMessage('Please enter a valid email address.');
       } else if (err.message && !localMessage) {
         setLocalMessage(err.message);
       }
@@ -69,7 +69,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
     clearError();
 
     if (!email.trim()) {
-      setLocalMessage('Please provide your registered institute email for credential recovery.');
+      setLocalMessage('Please enter your registered email address.');
       return;
     }
 
@@ -77,9 +77,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
     try {
       await resetPassword(email.trim());
       setResetEmailSent(true);
-      setLocalMessage('Credential recovery dispatch sent to your inbox.');
+      setLocalMessage('Password reset link has been sent to your inbox.');
     } catch (err: any) {
-      setLocalMessage(err.message || 'Unable to dispatch reset link. Verify institutional record.');
+      setLocalMessage(err.message || 'Unable to send reset link. Please check your email.');
     } finally {
       setSubmitting(false);
     }
@@ -116,9 +116,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               <div className="flex items-center justify-between mb-4">
                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-300 tag-mono text-[10px] font-bold">
                   <Sparkles className="w-3 h-3 text-violet-400" />
-                  <span>ACADEMIC ACCESS GATEWAY</span>
+                  <span>STUDENT & FACULTY PORTAL</span>
                 </div>
-                <span className="tag-mono text-[10px] text-slate-500">PORTAL 2.4</span>
+                <span className="tag-mono text-[10px] text-slate-500">ACADEMIC YEAR 2026</span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
@@ -126,8 +126,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               </h1>
               <p className="text-xs text-slate-400 mt-1">
                 {resetMode
-                  ? 'Enter your institutional email to dispatch password recovery'
-                  : 'Authenticate to access academic dashboard, attendance & records'}
+                  ? 'Enter your email address to receive a password reset link'
+                  : 'Sign in to access your attendance, assignments, and test schedule'}
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
                 <div>
                   <label htmlFor="reset-email" className="block tag-mono text-[10px] text-slate-400 mb-2">
-                    INSTITUTIONAL EMAIL
+                    EMAIL ADDRESS
                   </label>
                   <div className="inset-field">
                     <Mail className="w-4 h-4 text-violet-400 shrink-0" />
@@ -181,7 +181,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Dispatch Recovery Key</span>
+                      <span>Send Reset Link</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -198,7 +198,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                     }}
                     className="tag-mono text-xs text-violet-400 hover:text-violet-300 underline underline-offset-4"
                   >
-                    RETURN TO AUTH GATE
+                    BACK TO SIGN IN
                   </button>
                 </div>
               </form>
@@ -207,7 +207,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               <form onSubmit={handleSignIn} className="space-y-4" noValidate>
                 <div>
                   <label htmlFor="login-email" className="block tag-mono text-[10px] text-slate-400 mb-2">
-                    ACADEMIC IDENTIFIER / EMAIL
+                    EMAIL ADDRESS
                   </label>
                   <div className="inset-field">
                     <Mail className="w-4 h-4 text-violet-400 shrink-0" />
@@ -226,7 +226,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label htmlFor="login-password" className="tag-mono text-[10px] text-slate-400">
-                      ACCESS CIPHER
+                      PASSWORD
                     </label>
                     <button
                       type="button"
@@ -238,7 +238,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                       id="btn-forgot-password"
                       className="tag-mono text-[10px] text-violet-400 hover:underline"
                     >
-                      FORGOT CIPHER?
+                      FORGOT PASSWORD?
                     </button>
                   </div>
                   <div className="inset-field">
@@ -249,13 +249,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••••••"
+                      placeholder="••••••••"
                       className="text-sm font-medium"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Hide cipher' : 'Show cipher'}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                       className="text-slate-400 hover:text-white"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -263,7 +263,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                   </div>
                 </div>
 
-                {/* Glowing Orb Action Button (Inspiration 3) */}
+                {/* Sign In Button */}
                 <button
                   type="submit"
                   disabled={submitting}
@@ -274,7 +274,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span className="tracking-wide uppercase">Authenticate Credentials</span>
+                      <span className="tracking-wide uppercase">Sign In</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -282,18 +282,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               </form>
             )}
 
-            {/* Institutional Security Notice */}
+            {/* Security Notice */}
             <div className="mt-8 pt-6 border-t border-dashed border-slate-800 flex items-center justify-between text-xs text-slate-500">
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-violet-400" />
-                <span className="tag-mono text-[9px]">ENCRYPTED ACCESS</span>
+                <span className="tag-mono text-[9px]">SECURE LOGIN</span>
               </div>
-              <span className="tag-mono text-[9px] text-slate-500">REGISTRAR VERIFIED</span>
+              <span className="tag-mono text-[9px] text-slate-500">CAMPUS PORTAL</span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: The Academic Admit Ticket (Inspiration 1) */}
+        {/* RIGHT COLUMN: The Academic Admit Ticket */}
         <div className="lg:col-span-5 hidden lg:block">
           <div className="ticket-pass holo-sheen p-0 bg-slate-950 border-violet-500/30 shadow-2xl relative">
             
@@ -308,7 +308,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
                     <h3 className="font-black text-sm tracking-tight text-white uppercase">
                       I-SHARK ICT
                     </h3>
-                    <p className="tag-mono text-[8px] text-violet-400">ACADEMIC PASS</p>
+                    <p className="tag-mono text-[8px] text-violet-400">INSTITUTE PORTAL</p>
                   </div>
                 </div>
                 <span className="tag-mono text-[9px] px-2 py-0.5 rounded-full border border-violet-500/40 text-violet-300 bg-violet-500/10 font-bold">
@@ -318,7 +318,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
 
               <div className="mt-6 mb-4">
                 <div className="tag-mono text-[9px] text-slate-400 uppercase tracking-widest">
-                  AUTHORIZATION TICKET
+                  PORTAL ACCESS
                 </div>
                 <div className="text-xl font-black text-white uppercase mt-0.5">
                   STUDENT & FACULTY
@@ -331,22 +331,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               {/* Detail Items */}
               <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-800 text-xs">
                 <div>
-                  <span className="tag-mono text-[9px] text-slate-500 block">SECTOR</span>
-                  <span className="font-mono font-bold text-slate-200">CS-CORE</span>
+                  <span className="tag-mono text-[9px] text-slate-500 block">DEPARTMENT</span>
+                  <span className="font-mono font-bold text-slate-200">CS & IT</span>
                 </div>
                 <div>
-                  <span className="tag-mono text-[9px] text-slate-500 block">ENROLLMENT STATUS</span>
+                  <span className="tag-mono text-[9px] text-slate-500 block">STATUS</span>
                   <span className="font-mono font-bold text-emerald-400 flex items-center">
                     <Check className="w-3 h-3 mr-1" /> ACTIVE
                   </span>
                 </div>
                 <div>
-                  <span className="tag-mono text-[9px] text-slate-500 block">GATE PROTOCOL</span>
-                  <span className="font-mono font-bold text-slate-200">BIOMETRIC / TOKEN</span>
+                  <span className="tag-mono text-[9px] text-slate-500 block">TERM</span>
+                  <span className="font-mono font-bold text-slate-200">SEMESTER 2026</span>
                 </div>
                 <div>
                   <span className="tag-mono text-[9px] text-slate-500 block">SYSTEM STATUS</span>
-                  <span className="font-mono font-bold text-violet-400">ONLINE 99.9%</span>
+                  <span className="font-mono font-bold text-violet-400">ONLINE</span>
                 </div>
               </div>
             </div>
@@ -363,15 +363,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleDarkMode
               <div>
                 <div className="ticket-barcode-graphic text-slate-300 w-28" />
                 <span className="tag-mono text-[8px] text-slate-500 tracking-widest block mt-1">
-                  *ISHARK-GATE-2026*
+                  *I-SHARK-PORTAL*
                 </span>
               </div>
               <div className="text-right">
                 <span className="tag-mono text-[8px] text-slate-400 uppercase tracking-widest block">
-                  ADMIT QUOTA
+                  MIN ATTENDANCE
                 </span>
                 <span className="text-3xl font-black text-violet-400 font-mono tracking-tight leading-none">
-                  100%
+                  75%
                 </span>
               </div>
             </div>

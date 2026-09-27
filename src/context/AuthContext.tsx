@@ -89,8 +89,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       console.error('Error fetching user profile:', err);
+      const isConnectionIssue =
+        err?.code === 'unavailable' ||
+        (err?.message &&
+          (err.message.includes('offline') || err.message.includes('Could not reach')));
+
+      if (isConnectionIssue) {
+        // Attempt one retry after network initializes
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          const retrySnap = await getDoc(userDocRef);
+          if (retrySnap.exists()) {
+            const data = retrySnap.data();
+            const userActive =
+              data.active !== undefined
+                ? Boolean(data.active)
+                : data.isActive !== undefined
+                ? Boolean(data.isActive)
+                : true;
+
+            if (!userActive) {
+              await signOut(auth);
+              setError('Your account has been deactivated. Please contact your institute administrator.');
+              return null;
+            }
+
+            const userName = (data.name || data.fullName || user.displayName || 'Institute Member') as string;
+            return {
+              id: user.uid,
+              name: userName,
+              fullName: userName,
+              email: data.email || user.email || '',
+              role: data.role as UserRole,
+              active: true,
+              isActive: true,
+              phone: data.phone || '',
+              rollNumber: data.rollNumber || '',
+              batch: data.batch || '',
+              createdAt: data.createdAt || new Date().toISOString(),
+              updatedAt: data.updatedAt || new Date().toISOString()
+            };
+          }
+        } catch (retryErr) {
+          console.warn('Retry profile fetch failed:', retryErr);
+        }
+      }
+
       await signOut(auth);
-      setError('Unable to verify institute credentials. Please contact your administrator.');
+      setError(
+        isConnectionIssue
+          ? 'Network connection interrupted. Please verify your connection and sign in again.'
+          : 'Unable to verify institute credentials. Please contact your administrator.'
+      );
       return null;
     }
   };

@@ -71,12 +71,12 @@ function AppContent() {
             <GraduationCap className="w-8 h-8" />
           </div>
           <div>
-            <span className="tag-mono text-violet-400 font-semibold text-[10px]">AUTHENTICATING PORTAL</span>
+            <span className="tag-mono text-violet-400 font-semibold text-[10px]">STUDENT & STAFF PORTAL</span>
             <h2 className="text-lg font-black tracking-tight text-white mt-1">
               I-SHARK ICT
             </h2>
             <p className="text-xs text-slate-400 mt-1 font-mono">
-              INITIALIZING ADMIT MATRIX...
+              LOADING DASHBOARD...
             </p>
           </div>
           <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -106,7 +106,7 @@ function AppContent() {
         <CyberCanvasBackground />
         <div className="relative z-10 cyber-panel p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
           <p className="text-xs font-mono font-semibold text-slate-400">
-            VERIFYING ACADEMIC CREDENTIALS...
+            VERIFYING ACCOUNT...
           </p>
         </div>
       </div>

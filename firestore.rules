@@ -82,5 +82,9 @@ service cloud.firestore {
       allow create, update: if isAdmin() && isValidTest(request.resource.data);
       allow delete: if isAdmin();
     }
+
+    match /test/{docId} {
+      allow read: if true;
+    }
   }
 }

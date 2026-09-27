@@ -11,7 +11,8 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 import { TestItem, TestType, UserProfile } from '../../types';
 import {
@@ -31,6 +32,7 @@ export const TestsManager: React.FC = () => {
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -94,7 +96,7 @@ export const TestsManager: React.FC = () => {
         createdBy: currentUser?.uid || 'admin'
       });
 
-      setToastMessage('Evaluation admit slip scheduled and issued.');
+      setToastMessage('Test scheduled successfully.');
       setTimeout(() => setToastMessage(null), 3000);
 
       // Reset
@@ -149,7 +151,7 @@ export const TestsManager: React.FC = () => {
         assignedStudentIds: assignedTo === 'selected' ? selectedStudentIds : []
       });
 
-      setToastMessage('Evaluation admit schedule updated.');
+      setToastMessage('Test schedule updated successfully.');
       setTimeout(() => setToastMessage(null), 3000);
       setEditModalOpen(false);
       await fetchTestsAndStudents();
@@ -165,7 +167,7 @@ export const TestsManager: React.FC = () => {
     setIsSubmitting(true);
     try {
       await deleteTest(selectedTest.id);
-      setToastMessage('Evaluation admit slip canceled.');
+      setToastMessage('Test deleted successfully.');
       setTimeout(() => setToastMessage(null), 3000);
       setDeleteModalOpen(false);
       await fetchTestsAndStudents();
@@ -199,7 +201,7 @@ export const TestsManager: React.FC = () => {
     if (diffDays === 0) {
       return (
         <span className="tag-mono px-2 py-0.5 rounded text-[9px] font-bold bg-amber-950/60 text-amber-300 border border-amber-500/40 animate-pulse">
-          EVALUATION TODAY
+          EXAM TODAY
         </span>
       );
     }
@@ -218,6 +220,14 @@ export const TestsManager: React.FC = () => {
   };
 
   const filteredTests = tests.filter((t) => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      t.title.toLowerCase().includes(q) ||
+      t.subject.toLowerCase().includes(q) ||
+      t.syllabus.toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
     if (filterType === 'all') return true;
     return t.type.toLowerCase() === filterType.toLowerCase();
   });
@@ -231,16 +241,16 @@ export const TestsManager: React.FC = () => {
             <div className="flex items-center space-x-2 mb-1.5">
               <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
                 <Sparkles className="w-3 h-3 text-violet-400" />
-                <span>EXAMINATION & QUIZ DISPATCH</span>
+                <span>TESTS & EXAMS</span>
               </span>
-              <span className="tag-mono text-[9px] text-slate-500">ASSESSMENTS</span>
+              <span className="tag-mono text-[9px] text-slate-500">SCHEDULE</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center space-x-2">
               <FileText className="w-6 h-6 text-violet-400" />
-              <span>Tests & Quizzes Schedule</span>
+              <span>Tests & Examinations</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Issue admit slips, examination slots, syllabus mandates, and subject requirements.
+              Schedule tests, quizzes, and exams with syllabus topics and assigned students.
             </p>
           </div>
 
@@ -261,7 +271,7 @@ export const TestsManager: React.FC = () => {
             className="glow-orb-btn px-4 py-2.5 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 flex items-center space-x-2 cursor-pointer shrink-0 shadow-lg shadow-violet-900/40"
           >
             <Plus className="w-4 h-4" />
-            <span className="uppercase">Schedule Examination</span>
+            <span className="uppercase">Schedule Test</span>
           </button>
         </div>
       </div>
@@ -274,24 +284,37 @@ export const TestsManager: React.FC = () => {
         </div>
       )}
 
-      {/* Type Filter Pills */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1">
-        {['all', 'quiz', 'test', 'exam', 'midterm', 'final'].map((t) => (
-          <button
-            key={t}
-            onClick={() => setFilterType(t)}
-            className={`px-3 py-1.5 rounded-xl tag-mono text-xs font-bold uppercase transition cursor-pointer btn-tactile ${
-              filterType === t
-                ? 'bg-violet-600 text-white border border-violet-400 shadow-md shadow-violet-900/40'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
+      {/* Search and Type Filter Ribbon */}
+      <div className="ticket-pass p-4 bg-slate-900/90 border-violet-500/20 flex flex-col md:flex-row items-center gap-3">
+        <div className="relative w-full md:flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tests by title, subject, syllabus..."
+            className="w-full pl-10 pr-3.5 py-2 text-xs font-mono rounded-xl border border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500 focus:border-violet-500 outline-hidden"
+          />
+        </div>
+
+        <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          {['all', 'quiz', 'test', 'exam', 'midterm', 'final'].map((t) => (
+            <button
+              key={t}
+              onClick={() => setFilterType(t)}
+              className={`px-3 py-1.5 rounded-xl tag-mono text-xs font-bold uppercase transition cursor-pointer btn-tactile shrink-0 ${
+                filterType === t
+                  ? 'bg-violet-600 text-white border border-violet-400 shadow-md shadow-violet-900/40'
+                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tests Grid: Examination Admit Slips */}
+      {/* Tests Grid: Examination Cards */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
@@ -303,7 +326,7 @@ export const TestsManager: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             {filterType !== 'all'
               ? `No tests match the "${filterType}" category.`
-              : 'Issue an examination admit pass to notify candidates.'}
+              : 'Schedule a test to notify students.'}
           </p>
         </div>
       ) : (
@@ -334,26 +357,26 @@ export const TestsManager: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
                       <Calendar className="w-3 h-3 text-violet-400" />
-                      <span>EXAM DATE:</span>
+                      <span>DATE:</span>
                     </span>
                     <span className="font-mono font-bold text-white">{test.date}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
                       <Clock className="w-3 h-3 text-amber-400" />
-                      <span>WINDOW:</span>
+                      <span>TIME:</span>
                     </span>
                     <span className="font-mono text-slate-200">{test.time}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
                       <Users className="w-3 h-3 text-emerald-400" />
-                      <span>COHORT:</span>
+                      <span>ASSIGNED:</span>
                     </span>
                     <span className="tag-mono text-[9px] font-bold text-violet-300">
                       {test.assignedTo === 'all'
                         ? 'ALL STUDENTS'
-                        : `${test.assignedStudentIds?.length || 0} ADMITTED`}
+                        : `${test.assignedStudentIds?.length || 0} STUDENTS`}
                     </span>
                   </div>
                 </div>
@@ -362,7 +385,7 @@ export const TestsManager: React.FC = () => {
                   <div className="text-xs">
                     <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1 mb-1">
                       <BookOpen className="w-3 h-3 text-rose-400" />
-                      <span>SYLLABUS COVERAGE:</span>
+                      <span>SYLLABUS & TOPICS:</span>
                     </span>
                     <p className="tag-mono text-[10px] line-clamp-2 text-slate-400 bg-slate-900/50 p-2 rounded-lg border border-slate-800/80">
                       {test.syllabus}
@@ -383,7 +406,7 @@ export const TestsManager: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <div className="ticket-barcode-graphic text-slate-400 w-16" />
                   <span className="tag-mono text-[8px] text-slate-500">
-                    PASS #{test.id.slice(0, 6)}
+                    TEST #{test.id.slice(0, 6)}
                   </span>
                 </div>
 
@@ -428,10 +451,10 @@ export const TestsManager: React.FC = () => {
             </button>
 
             <h2 className="text-base font-black text-white uppercase tag-mono mb-1">
-              {createModalOpen ? 'Issue Examination Slip' : 'Update Examination Schedule'}
+              {createModalOpen ? 'Schedule Test' : 'Edit Test Schedule'}
             </h2>
             <p className="tag-mono text-[10px] text-slate-400 mb-4">
-              Enter subject, evaluation classification, exam date, and curriculum syllabus.
+              Enter subject, test type, date, time, and syllabus details.
             </p>
 
             {formError && (
@@ -444,7 +467,7 @@ export const TestsManager: React.FC = () => {
             <form onSubmit={createModalOpen ? handleCreateTest : handleUpdateTest} className="space-y-4">
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  EXAMINATION TITLE *
+                  TEST TITLE *
                 </label>
                 <div className="inset-field">
                   <input
@@ -461,7 +484,7 @@ export const TestsManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                    EVALUATION TYPE *
+                    TEST TYPE *
                   </label>
                   <div className="inset-field">
                     <select
@@ -480,7 +503,7 @@ export const TestsManager: React.FC = () => {
 
                 <div>
                   <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                    SUBJECT / DISCIPLINE *
+                    SUBJECT *
                   </label>
                   <div className="inset-field">
                     <input
@@ -513,7 +536,7 @@ export const TestsManager: React.FC = () => {
 
                 <div>
                   <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                    TIME / DURATION *
+                    TIME *
                   </label>
                   <div className="inset-field">
                     <input
@@ -530,7 +553,7 @@ export const TestsManager: React.FC = () => {
 
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  SYLLABUS & CURRICULUM SCOPE *
+                  SYLLABUS & TOPICS *
                 </label>
                 <div className="inset-field">
                   <textarea
@@ -538,7 +561,7 @@ export const TestsManager: React.FC = () => {
                     rows={3}
                     value={syllabus}
                     onChange={(e) => setSyllabus(e.target.value)}
-                    placeholder="Specify modules, chapters, and required calculation gear..."
+                    placeholder="Specify modules, chapters, and required topics..."
                     className="text-xs w-full bg-transparent outline-hidden text-slate-100 placeholder:text-slate-600 resize-none font-mono"
                   />
                 </div>
@@ -546,7 +569,7 @@ export const TestsManager: React.FC = () => {
 
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  TARGET ADMIT ALLOCATION
+                  ASSIGN TO
                 </label>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
@@ -558,7 +581,7 @@ export const TestsManager: React.FC = () => {
                         : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
                     }`}
                   >
-                    ALL ENROLLED STUDENTS
+                    ALL STUDENTS
                   </button>
                   <button
                     type="button"
@@ -569,14 +592,14 @@ export const TestsManager: React.FC = () => {
                         : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
                     }`}
                   >
-                    SPECIFIED CANDIDATES ({selectedStudentIds.length})
+                    SELECTED STUDENTS ({selectedStudentIds.length})
                   </button>
                 </div>
 
                 {assignedTo === 'selected' && (
                   <div className="max-h-44 overflow-y-auto border border-slate-800 rounded-xl p-2 space-y-1 bg-slate-950">
                     {students.length === 0 ? (
-                      <p className="tag-mono text-xs text-slate-500 p-2">No active students available.</p>
+                      <p className="tag-mono text-xs text-slate-500 p-2">No students available.</p>
                     ) : (
                       students.map((st) => (
                         <label
@@ -618,7 +641,7 @@ export const TestsManager: React.FC = () => {
                   disabled={isSubmitting}
                   className="glow-orb-btn px-5 py-2 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 disabled:opacity-50 transition cursor-pointer uppercase shadow-lg shadow-violet-900/40"
                 >
-                  {isSubmitting ? 'DISPATCHING...' : createModalOpen ? 'ISSUE ADMIT PASS' : 'SAVE CHANGES'}
+                  {isSubmitting ? 'SAVING...' : createModalOpen ? 'SCHEDULE TEST' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>
@@ -630,9 +653,9 @@ export const TestsManager: React.FC = () => {
       {deleteModalOpen && selectedTest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
           <div className="w-full max-w-sm rounded-2xl ticket-pass bg-slate-950 border-rose-500/40 p-6 shadow-2xl">
-            <h3 className="text-sm font-bold text-white uppercase tag-mono mb-2">Delete Examination Slip</h3>
-            <p className="tag-mono text-xs text-slate-400 mb-5 leading-relaxed">
-              Confirm cancellation and purge of admit pass <strong>"{selectedTest.title}"</strong>?
+            <h3 className="text-sm font-bold text-white uppercase tag-mono mb-2">Delete Test</h3>
+            <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+              Are you sure you want to delete test <strong>"{selectedTest.title}"</strong>? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-2">
               <button
@@ -646,7 +669,7 @@ export const TestsManager: React.FC = () => {
                 disabled={isSubmitting}
                 className="px-4 py-2 tag-mono text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-md disabled:opacity-50 transition cursor-pointer"
               >
-                {isSubmitting ? 'CANCELED...' : 'CONFIRM PURGE'}
+                {isSubmitting ? 'DELETING...' : 'DELETE TEST'}
               </button>
             </div>
           </div>

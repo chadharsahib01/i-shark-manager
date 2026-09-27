@@ -17,14 +17,22 @@ import {
   Sparkles,
   Barcode,
   Eye,
-  EyeOff
+  EyeOff,
+  FileText,
+  Trash2
 } from 'lucide-react';
 import { UserProfile } from '../../types';
-import { getAllStudents, updateStudentProfile, toggleStudentStatus } from '../../services/firestoreService';
+import {
+  getAllStudents,
+  updateStudentProfile,
+  toggleStudentStatus,
+  deleteStudent
+} from '../../services/firestoreService';
 import { useAuth } from '../../context/AuthContext';
+import { StudentReportModal } from '../StudentReportModal';
 
 export const StudentManagement: React.FC = () => {
-  const { createStudentAccount } = useAuth();
+  const { createStudentAccount, resetPassword } = useAuth();
 
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +44,10 @@ export const StudentManagement: React.FC = () => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<UserProfile | null>(null);
+  const [reportModalStudentId, setReportModalStudentId] = useState<string | null>(null);
+  const [deleteStudentTarget, setDeleteStudentTarget] = useState<UserProfile | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [resetPasswordSent, setResetPasswordSent] = useState(false);
 
   // Form states for Add Student
   const [newFullName, setNewFullName] = useState('');
@@ -158,6 +170,32 @@ export const StudentManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteStudent = async () => {
+    if (!deleteStudentTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteStudent(deleteStudentTarget.id);
+      setStudents((prev) => prev.filter((s) => s.id !== deleteStudentTarget.id));
+      setSuccessMessage(`Student ${deleteStudentTarget.fullName} has been removed from database.`);
+      setDeleteStudentTarget(null);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      alert(`Failed to delete student: ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSendPasswordReset = async (email: string) => {
+    try {
+      await resetPassword(email);
+      setResetPasswordSent(true);
+      setTimeout(() => setResetPasswordSent(false), 4000);
+    } catch (err: any) {
+      alert(`Could not send password reset email: ${err.message}`);
+    }
+  };
+
   const batches = Array.from(new Set(students.map((s) => s.batch).filter(Boolean))) as string[];
 
   const filteredStudents = students.filter((s) => {
@@ -191,16 +229,16 @@ export const StudentManagement: React.FC = () => {
             <div className="flex items-center space-x-2 mb-1.5">
               <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
                 <Sparkles className="w-3 h-3 text-violet-400" />
-                <span>ENROLLMENT MATRIX // REGISTRY</span>
+                <span>STUDENT DIRECTORY // ACADEMIC</span>
               </span>
-              <span className="tag-mono text-[9px] text-slate-500">DATABASE</span>
+              <span className="tag-mono text-[9px] text-slate-500">RECORDS</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center space-x-2">
               <Users className="w-6 h-6 text-violet-400" />
               <span>Student Directory</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Manage student registrations, academic admit credentials, and active roster states.
+              Manage student profiles, enrollment, roll numbers, batches, and account status.
             </p>
           </div>
 
@@ -213,7 +251,7 @@ export const StudentManagement: React.FC = () => {
             className="glow-orb-btn px-4 py-2.5 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 flex items-center space-x-2 cursor-pointer shrink-0 shadow-lg shadow-violet-900/40"
           >
             <UserPlus className="w-4 h-4" />
-            <span className="uppercase">Enroll New Student</span>
+            <span className="uppercase">Add Student</span>
           </button>
         </div>
       </div>
@@ -235,7 +273,7 @@ export const StudentManagement: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, roll code, email, batch..."
+            placeholder="Search by name, roll number, email, batch..."
             className="w-full pl-10 pr-3.5 py-2 text-xs font-mono rounded-xl border border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500 focus:border-violet-500 outline-hidden"
           />
         </div>
@@ -248,9 +286,9 @@ export const StudentManagement: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="py-2 px-3 text-xs tag-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-slate-200 outline-hidden w-full md:w-auto focus:border-violet-500"
           >
-            <option value="all">ALL ROSTER ({students.length})</option>
+            <option value="all">ALL STUDENTS ({students.length})</option>
             <option value="active">ACTIVE ({activeCount})</option>
-            <option value="inactive">DEACTIVATED ({inactiveCount})</option>
+            <option value="inactive">INACTIVE ({inactiveCount})</option>
           </select>
 
           {/* Batch Filter */}
@@ -283,11 +321,11 @@ export const StudentManagement: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             {searchQuery || statusFilter !== 'all'
               ? 'Try modifying search criteria or status filter.'
-              : 'Enroll your first student to begin logging academic records.'}
+              : 'Add your first student to begin tracking records.'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
           {filteredStudents.map((student) => (
             <div
               key={student.id}
@@ -301,12 +339,12 @@ export const StudentManagement: React.FC = () => {
               <div className="p-5 relative">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-tight">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-black text-white uppercase tracking-tight truncate">
                       {student.fullName}
                     </h3>
                     <div className="flex items-center space-x-1.5 tag-mono text-[10px] text-slate-400 mt-0.5">
-                      <Mail className="w-3 h-3 text-violet-400" />
+                      <Mail className="w-3 h-3 text-violet-400 shrink-0" />
                       <span className="truncate max-w-[170px]">{student.email}</span>
                     </div>
                   </div>
@@ -373,23 +411,33 @@ export const StudentManagement: React.FC = () => {
                 <div className="ticket-notch-right" />
               </div>
 
-              {/* Bottom Stub Section & Action Controls */}
-              <div className="p-4 bg-slate-900/80 flex items-center justify-between gap-2">
-                <div className="flex items-center space-x-2">
-                  <div className="ticket-barcode-graphic text-slate-400 w-16" />
-                  <span className="tag-mono text-[8px] text-slate-500">
-                    #{student.id.slice(0, 6)}
+              {/* Bottom Section & Action Controls */}
+              <div className="p-3.5 sm:p-4 bg-slate-900/80 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex items-center space-x-2 shrink-0">
+                  <div className="ticket-barcode-graphic text-slate-400 w-12 sm:w-16 shrink-0" />
+                  <span className="tag-mono text-[8px] sm:text-[9px] text-slate-400 font-bold truncate">
+                    ID #{student.id.slice(0, 6)}
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-1.5 justify-end flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setReportModalStudentId(student.id)}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/30 transition btn-tactile text-xs flex items-center space-x-1 cursor-pointer shrink-0 font-bold shadow-xs"
+                    title="View Single Student Academic Report"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span className="tag-mono text-[10px] font-bold">REPORT</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setSelectedStudent({ ...student });
                       setFormError(null);
                       setEditModalOpen(true);
                     }}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition btn-tactile text-xs flex items-center space-x-1"
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition btn-tactile text-xs flex items-center space-x-1 cursor-pointer shrink-0 font-bold shadow-xs"
                     title="Edit Student Record"
                   >
                     <Edit2 className="w-3.5 h-3.5 text-violet-400" />
@@ -398,13 +446,23 @@ export const StudentManagement: React.FC = () => {
 
                   <button
                     onClick={() => handleToggleStatus(student)}
-                    className={`p-1.5 rounded-lg tag-mono text-[10px] font-bold border transition btn-tactile ${
+                    className={`px-2 py-1.5 rounded-lg tag-mono text-[10px] font-bold border transition btn-tactile cursor-pointer shrink-0 ${
                       student.isActive
                         ? 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/20'
                         : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
                     }`}
+                    title={student.isActive ? 'Deactivate student account' : 'Activate student account'}
                   >
                     {student.isActive ? 'DEACTIVATE' : 'ACTIVATE'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDeleteStudentTarget(student)}
+                    className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 transition btn-tactile text-xs cursor-pointer shrink-0"
+                    title="Delete Student Record"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -429,9 +487,9 @@ export const StudentManagement: React.FC = () => {
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-white uppercase tag-mono">Enroll New Student</h2>
+                <h2 className="text-base font-black text-white uppercase tag-mono">Add Student</h2>
                 <p className="tag-mono text-[10px] text-slate-400">
-                  Generates Firebase Authentication credentials and institutional registry profile.
+                  Creates login credentials and a student profile in the directory.
                 </p>
               </div>
             </div>
@@ -446,7 +504,7 @@ export const StudentManagement: React.FC = () => {
             <form onSubmit={handleAddStudent} className="space-y-4">
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  FULL STUDENT NAME *
+                  FULL NAME *
                 </label>
                 <div className="inset-field">
                   <input
@@ -463,7 +521,7 @@ export const StudentManagement: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                    STUDENT EMAIL (LOGIN) *
+                    EMAIL ADDRESS (LOGIN) *
                   </label>
                   <div className="inset-field">
                     <input
@@ -479,7 +537,7 @@ export const StudentManagement: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="tag-mono text-[10px] text-slate-400">
-                      INITIAL PASSWORD *
+                      PASSWORD *
                     </label>
                     <button
                       type="button"
@@ -497,7 +555,7 @@ export const StudentManagement: React.FC = () => {
                       minLength={8}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Min 8 characters (alphanumeric)"
+                      placeholder="Min 8 characters"
                       className="text-xs w-full pr-8"
                     />
                     <button
@@ -520,7 +578,7 @@ export const StudentManagement: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                    ROLL / ADMIT NUMBER
+                    ROLL NUMBER
                   </label>
                   <div className="inset-field">
                     <input
@@ -534,7 +592,7 @@ export const StudentManagement: React.FC = () => {
                 </div>
                 <div>
                   <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                    BATCH / COHORT
+                    BATCH / CLASS
                   </label>
                   <div className="inset-field">
                     <input
@@ -550,7 +608,7 @@ export const StudentManagement: React.FC = () => {
 
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  CONTACT TELEPHONE (OPTIONAL)
+                  PHONE NUMBER (OPTIONAL)
                 </label>
                 <div className="inset-field">
                   <input
@@ -576,7 +634,7 @@ export const StudentManagement: React.FC = () => {
                   disabled={isSubmitting}
                   className="glow-orb-btn px-5 py-2 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 disabled:opacity-50 transition cursor-pointer uppercase shadow-lg shadow-violet-900/40"
                 >
-                  {isSubmitting ? 'PROVISIONING...' : 'ENROLL STUDENT'}
+                  {isSubmitting ? 'ADDING STUDENT...' : 'ADD STUDENT'}
                 </button>
               </div>
             </form>
@@ -599,7 +657,7 @@ export const StudentManagement: React.FC = () => {
               Edit Student: {selectedStudent.fullName}
             </h2>
             <p className="tag-mono text-[10px] text-slate-400 mb-4">
-              Update academic credentials. Primary email ({selectedStudent.email}) is anchored to institutional identity.
+              Update student details. Email ({selectedStudent.email}) is used for logging into the portal.
             </p>
 
             <form onSubmit={handleEditStudent} className="space-y-4">
@@ -680,8 +738,23 @@ export const StudentManagement: React.FC = () => {
                   className="rounded border-slate-700 bg-slate-900 text-violet-600 focus:ring-violet-500"
                 />
                 <label htmlFor="student-active-check" className="tag-mono text-xs text-slate-300">
-                  ROSTER STATUS ACTIVE (INCLUDED IN DAILY ATTENDANCE DISPATCH)
+                  ACTIVE STUDENT (INCLUDED IN DAILY ATTENDANCE)
                 </label>
+              </div>
+
+              {/* Password Reset Action */}
+              <div className="pt-2 pb-1 border-t border-slate-800/80 flex items-center justify-between">
+                <div>
+                  <span className="tag-mono text-[10px] text-slate-400 block">ACCOUNT LOGIN</span>
+                  <span className="text-xs text-slate-300 font-mono">{selectedStudent.email}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSendPasswordReset(selectedStudent.email)}
+                  className="px-3 py-1.5 rounded-lg tag-mono text-[10px] font-bold text-violet-300 hover:text-white bg-violet-950/40 hover:bg-violet-900/60 border border-violet-700/50 transition cursor-pointer"
+                >
+                  {resetPasswordSent ? 'LINK SENT!' : 'SEND PASSWORD RESET'}
+                </button>
               </div>
 
               <div className="pt-3 flex justify-end space-x-2 border-t border-slate-800">
@@ -703,6 +776,56 @@ export const StudentManagement: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Delete Student Confirmation Dialog */}
+      {deleteStudentTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-md rounded-2xl bg-slate-950 border border-rose-500/40 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center space-x-3 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Student</h3>
+                <span className="tag-mono text-[10px] text-rose-400 font-bold">PERMANENT DELETION</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              Are you sure you want to permanently delete{' '}
+              <strong className="text-white font-mono">{deleteStudentTarget.fullName}</strong> ({deleteStudentTarget.email})
+              from the student directory? This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteStudentTarget(null)}
+                className="px-4 py-2 rounded-xl tag-mono text-xs font-bold text-slate-400 hover:text-white bg-slate-900 border border-slate-800 transition cursor-pointer"
+              >
+                CANCEL
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteStudent}
+                className="px-4 py-2 rounded-xl tag-mono text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 border border-rose-400/40 transition cursor-pointer shadow-lg shadow-rose-900/40"
+              >
+                {isDeleting ? 'DELETING...' : 'CONFIRM DELETE'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Single Student Report Modal */}
+      {reportModalStudentId && (
+        <StudentReportModal
+          studentId={reportModalStudentId}
+          onClose={() => setReportModalStudentId(null)}
+        />
       )}
     </div>
   );

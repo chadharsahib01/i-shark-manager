@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import rawConfig from '../../firebase-applet-config.json';
 
 export const firebaseConfig = {
@@ -15,10 +15,21 @@ export const firebaseConfig = {
 
 export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with the "(default)" database, NOT any custom or previous database ID
-export const db = (!firebaseConfig.firestoreDatabaseId || firebaseConfig.firestoreDatabaseId === '(default)')
-  ? getFirestore(app)
-  : getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Initialize Firestore with experimentalAutoDetectLongPolling to prevent [code=unavailable] in sandboxed/iframe environments
+const dbId = (!firebaseConfig.firestoreDatabaseId || firebaseConfig.firestoreDatabaseId === '(default)')
+  ? undefined
+  : firebaseConfig.firestoreDatabaseId;
+
+let firestoreInstance;
+try {
+  firestoreInstance = dbId
+    ? initializeFirestore(app, { experimentalAutoDetectLongPolling: true }, dbId)
+    : initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+} catch {
+  firestoreInstance = dbId ? getFirestore(app, dbId) : getFirestore(app);
+}
+
+export const db = firestoreInstance;
 
 export const auth = getAuth(app);
 
@@ -26,12 +37,16 @@ export const auth = getAuth(app);
 export async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
+      console.warn('Firestore is running in offline mode or waiting for connection.');
+    } else if (error?.code === 'unavailable') {
+      console.warn('Firestore backend connection pending, switching to long-polling auto-detection.');
     }
   }
 }
+
+// Perform connection verification
 testConnection();
 
 // Standard Error handling conforming to skill specs

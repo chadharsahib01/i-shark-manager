@@ -34,19 +34,19 @@ export const Navigation: React.FC<NavigationProps> = ({
   const role: UserRole = (userProfile?.role as UserRole) || 'student';
 
   const adminNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, code: 'DSB-01' },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck, code: 'ATT-02' },
-    { id: 'students', label: 'Students', icon: Users, code: 'STD-03' },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare, code: 'TSK-04' },
-    { id: 'tests', label: 'Tests', icon: FileText, code: 'TST-05' },
-    { id: 'reports', label: 'Reports', icon: BarChart3, code: 'RPT-06' }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'students', label: 'Students', icon: Users },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { id: 'tests', label: 'Tests', icon: FileText },
+    { id: 'reports', label: 'Reports', icon: BarChart3 }
   ];
 
   const studentNavItems = [
-    { id: 'dashboard', label: 'My Pass', icon: LayoutDashboard, code: 'MYP-01' },
-    { id: 'attendance', label: 'Attendance', icon: CalendarCheck, code: 'ATT-02' },
-    { id: 'tasks', label: 'Vouchers', icon: CheckSquare, code: 'TSK-03' },
-    { id: 'tests', label: 'Admit Slips', icon: FileText, code: 'TST-04' }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { id: 'tests', label: 'Tests', icon: FileText }
   ];
 
   const navItems = role === 'admin' ? adminNavItems : studentNavItems;
@@ -55,7 +55,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* =========================================================================
-          DESKTOP CYBER SIDEBAR (hidden on mobile/tablet, visible on lg+)
+          DESKTOP SIDEBAR
          ========================================================================= */}
       <aside className="hidden lg:flex fixed top-0 bottom-0 left-0 w-64 z-30 p-4 flex-col pointer-events-none">
         <div className="ticket-pass h-full w-full p-5 flex flex-col justify-between pointer-events-auto overflow-hidden relative">
@@ -79,12 +79,12 @@ export const Navigation: React.FC<NavigationProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
                 </div>
                 <p className="tag-mono text-[9px] text-slate-400 truncate">
-                  ACADEMIC PORTAL V2.4
+                  ACADEMIC MANAGEMENT
                 </p>
               </div>
             </div>
 
-            {/* Role Admit Badge Ticket Header */}
+            {/* Role Badge Header */}
             <div className="mb-6 p-2.5 rounded-xl bg-slate-900/90 dark:bg-black/50 border border-violet-500/20 flex items-center justify-between shadow-inner">
               <div className="flex items-center space-x-2">
                 <div className="p-1 rounded-md bg-violet-500/10 text-violet-400">
@@ -95,7 +95,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </span>
               </div>
               <span className="tag-mono text-[9px] px-2 py-0.5 rounded-md font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                {role === 'admin' ? 'ADM-CORE' : 'STUDENT'}
+                {role === 'admin' ? 'ADMIN' : 'STUDENT'}
               </span>
             </div>
 
@@ -119,9 +119,6 @@ export const Navigation: React.FC<NavigationProps> = ({
                       <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
                       <span className="truncate">{item.label}</span>
                     </div>
-                    <span className={`tag-mono text-[9px] opacity-75 ${isActive ? 'text-violet-200' : 'text-slate-500'}`}>
-                      {item.code}
-                    </span>
                   </button>
                 );
               })}
@@ -143,9 +140,9 @@ export const Navigation: React.FC<NavigationProps> = ({
                 {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-violet-400" />}
               </button>
 
-              {/* Monospace Code Pill */}
-              <div className="tag-mono text-[9px] text-slate-500 px-2 py-1 rounded bg-slate-900 border border-slate-800">
-                AUTH-OK
+              {/* Status Pill */}
+              <div className="tag-mono text-[9px] text-emerald-400 px-2 py-1 rounded bg-slate-900 border border-slate-800">
+                ACTIVE
               </div>
 
               {/* Logout Button */}
@@ -161,14 +158,14 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             </div>
 
-            {/* Inset User Info Capsule */}
+            {/* User Info Capsule */}
             <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
                 {(userProfile?.fullName || currentUser?.email || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-slate-100 truncate leading-snug">
-                  {userProfile?.fullName || 'Academic User'}
+                  {userProfile?.fullName || 'User'}
                 </p>
                 <p className="tag-mono text-[9px] text-slate-400 truncate">
                   {userProfile?.rollNumber || currentUser?.email || 'ID: UNKNOWN'}
@@ -180,7 +177,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       </aside>
 
       {/* =========================================================================
-          STICKY TOP CYBER HEADER
+          TOP HEADER
          ========================================================================= */}
       <header className="sticky top-0 z-20 w-full px-4 sm:px-6 lg:px-8 py-3 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -194,19 +191,15 @@ export const Navigation: React.FC<NavigationProps> = ({
                 I-SHARK ICT
               </h1>
               <p className="tag-mono text-[9px] text-violet-400 font-bold">
-                {currentTabObj.label} // {currentTabObj.code}
+                {currentTabObj.label}
               </p>
             </div>
           </div>
 
-          {/* Desktop Breadcrumb/Page Title with Ticket Notch Pill */}
+          {/* Desktop Breadcrumb/Page Title */}
           <div className="hidden lg:flex items-center space-x-3">
             <span className="text-xl font-black text-white tracking-tight">
               {currentTabObj.label}
-            </span>
-            <span className="tag-mono px-2.5 py-1 rounded-lg bg-slate-800/80 text-violet-300 border border-violet-500/20 flex items-center space-x-1.5 shadow-xs">
-              <Sparkles className="w-3 h-3 text-violet-400" />
-              <span>{currentTabObj.code}</span>
             </span>
             <span className="text-xs px-2.5 py-1 rounded-lg font-mono text-slate-400 bg-slate-900/60 border border-slate-800">
               {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
@@ -223,7 +216,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               }`}
             >
               {role === 'admin' ? <Shield className="w-3.5 h-3.5 mr-1 text-violet-400" /> : <User className="w-3.5 h-3.5 mr-1 text-emerald-400" />}
-              {role === 'admin' ? 'CHIEF ADMIN' : 'STUDENT ENROLLED'}
+              {role === 'admin' ? 'ADMIN' : 'STUDENT'}
             </span>
 
             {/* Mobile dark mode button */}

@@ -14,7 +14,9 @@ import {
   CalendarCheck,
   Sparkles,
   ChevronRight,
-  UserPlus
+  UserPlus,
+  Search,
+  X
 } from 'lucide-react';
 import {
   UserProfile,
@@ -29,6 +31,7 @@ import {
   getAllTests
 } from '../../services/firestoreService';
 import { getLocalDateString, getDaysDiffLocal } from '../../utils/dateUtils';
+import { StudentReportModal } from '../StudentReportModal';
 
 interface AdminDashboardProps {
   onNavigate: (tab: string) => void;
@@ -41,6 +44,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
   const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [tests, setTests] = useState<TestItem[]>([]);
+  const [showLookupModal, setShowLookupModal] = useState(false);
+  const [lookupQuery, setLookupQuery] = useState('');
+  const [selectedReportStudentId, setSelectedReportStudentId] = useState<string | null>(null);
 
   const todayStr = getLocalDateString();
 
@@ -121,7 +127,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
   return (
     <div className="space-y-6">
       {/* =========================================================================
-          WELCOME & INSTITUTE COMMAND HEADER (Inspiration 1 & 4)
+          WELCOME & INSTITUTE HEADER
          ========================================================================= */}
       <div className="ticket-pass p-6 sm:p-7 relative overflow-hidden bg-slate-900/90 border-violet-500/20">
         <div className="absolute top-0 left-12 right-12 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent" />
@@ -131,7 +137,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
             <div className="flex items-center space-x-2 mb-2">
               <span className="tag-mono px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
                 <Sparkles className="w-3 h-3 text-violet-400" />
-                <span>COMMAND CORE // ACTIVE TERM</span>
+                <span>ADMIN DASHBOARD // 2026</span>
               </span>
               <span className="tag-mono text-[9px] text-slate-500">
                 {new Date().toLocaleDateString(undefined, {
@@ -143,10 +149,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
-              Academic Operations Core
+              Institute Management Dashboard
             </h1>
             <p className="text-xs text-slate-400 mt-1 max-w-xl">
-              I-SHARK Institute of Computer Technologies — Real-time attendance logging, task vouchers, and examination schedules.
+              I-SHARK Institute of Computer Technologies — Overview of daily attendance, assignments, and test schedules.
             </p>
           </div>
 
@@ -172,14 +178,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               className="px-4 py-2.5 text-xs tag-mono font-bold text-slate-300 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl shadow-xs flex items-center space-x-2 btn-tactile cursor-pointer"
             >
               <UserPlus className="w-4 h-4 text-violet-400" />
-              <span>ENROLL STUDENT</span>
+              <span>ADD STUDENT</span>
+            </button>
+            <button
+              onClick={() => setShowLookupModal(true)}
+              id="btn-quick-lookup-report"
+              className="px-4 py-2.5 text-xs tag-mono font-bold text-slate-300 hover:text-white bg-slate-950 hover:bg-slate-800 border border-slate-700 hover:border-violet-500/50 rounded-xl shadow-xs flex items-center space-x-2 btn-tactile cursor-pointer"
+            >
+              <FileText className="w-4 h-4 text-violet-400" />
+              <span>STUDENT REPORT</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          BENTO GRID: ATTENDANCE & INSTITUTION METRICS
+          BENTO GRID: ATTENDANCE & INSTITUTE METRICS
          ========================================================================= */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
         {/* Present Card */}
@@ -195,16 +209,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
                 {presentCount}
               </span>
-              <span className="tag-mono text-[10px] text-emerald-400 font-bold">ON-TIME</span>
+              <span className="tag-mono text-[10px] text-emerald-400 font-bold">ON TIME</span>
             </div>
-            <p className="tag-mono text-[9px] text-slate-500 mt-1">BIOMETRIC LOGGED</p>
+            <p className="tag-mono text-[9px] text-slate-500 mt-1">RECORDED</p>
           </div>
         </div>
 
         {/* Late Card */}
         <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-amber-500/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="tag-mono text-slate-400">LATE ARRIVAL</span>
+            <span className="tag-mono text-slate-400">LATE TODAY</span>
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
               <Clock className="w-4 h-4" />
             </div>
@@ -216,14 +230,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               </span>
               <span className="tag-mono text-[10px] text-amber-400 font-bold">DELAYED</span>
             </div>
-            <p className="tag-mono text-[9px] text-slate-500 mt-1">TIMESTAMP RECORDED</p>
+            <p className="tag-mono text-[9px] text-slate-500 mt-1">RECORDED</p>
           </div>
         </div>
 
         {/* Absent Card */}
         <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-rose-500/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="tag-mono text-slate-400">ABSENT / MISS</span>
+            <span className="tag-mono text-slate-400">ABSENT TODAY</span>
             <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
               <XCircle className="w-4 h-4" />
             </div>
@@ -235,14 +249,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               </span>
               <span className="tag-mono text-[10px] text-rose-400 font-bold">UNEXCUSED</span>
             </div>
-            <p className="tag-mono text-[9px] text-slate-500 mt-1">FLAGGED FOR REVIEW</p>
+            <p className="tag-mono text-[9px] text-slate-500 mt-1">RECORDED</p>
           </div>
         </div>
 
         {/* Leave Card */}
         <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-sky-500/20 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="tag-mono text-slate-400">AUTHORIZED LEAVE</span>
+            <span className="tag-mono text-slate-400">ON LEAVE</span>
             <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
               <AlertCircle className="w-4 h-4" />
             </div>
@@ -252,9 +266,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
                 {leaveCount}
               </span>
-              <span className="tag-mono text-[10px] text-sky-400 font-bold">PERMITTED</span>
+              <span className="tag-mono text-[10px] text-sky-400 font-bold">APPROVED</span>
             </div>
-            <p className="tag-mono text-[9px] text-slate-500 mt-1">OFFICIAL NOTICE</p>
+            <p className="tag-mono text-[9px] text-slate-500 mt-1">LEAVE RECORDED</p>
           </div>
         </div>
 
@@ -264,7 +278,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
           className="col-span-2 md:col-span-1 ticket-pass p-4 sm:p-5 bg-slate-900/90 border-violet-500/20 flex flex-col justify-between cursor-pointer group hover:border-violet-500/50 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="tag-mono text-slate-400">ENROLLED BASE</span>
+            <span className="tag-mono text-slate-400">TOTAL STUDENTS</span>
             <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 group-hover:scale-105 transition-transform">
               <Users className="w-4 h-4" />
             </div>
@@ -277,7 +291,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
               <span className="tag-mono text-[10px] text-violet-400 font-bold">ACTIVE</span>
             </div>
             <div className="flex items-center space-x-1 tag-mono text-[10px] text-violet-400 font-bold mt-1">
-              <span>VIEW REGISTRY</span>
+              <span>VIEW DIRECTORY</span>
               <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
@@ -285,10 +299,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
       </div>
 
       {/* =========================================================================
-          BENTO SECOND ROW: TURNOUT METER & QUICK LAUNCH DOCK
+          BENTO SECOND ROW: ATTENDANCE PROGRESS & QUICK SHORTCUTS
          ========================================================================= */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Today's Turnout Progress Card */}
+        {/* Today's Attendance Progress Card */}
         <div className="md:col-span-2 ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
@@ -296,11 +310,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
                 <TrendingUp className="w-4 h-4" />
               </div>
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                Turnout Metric Gauging
+                Today's Attendance Rate
               </h2>
             </div>
             <span className="tag-mono px-3 py-1 rounded-md bg-violet-500/10 text-violet-300 border border-violet-500/30 font-bold">
-              {markedCount > 0 ? `${attendancePercent}% TURNOUT` : 'PENDING LOGS'}
+              {markedCount > 0 ? `${attendancePercent}% ATTENDANCE` : 'NOT MARKED YET'}
             </span>
           </div>
 
@@ -318,12 +332,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
           </div>
 
           <div className="flex items-center justify-between tag-mono text-[10px] text-slate-500 pt-3 border-t border-slate-800/80 mt-4">
-            <span>BENCHMARK TARGET: 75% MINIMUM</span>
+            <span>TARGET: 75% MINIMUM</span>
             <button
               onClick={() => onNavigate('reports')}
               className="text-violet-400 hover:text-violet-300 flex items-center space-x-1 font-bold underline underline-offset-4"
             >
-              <span>AUDIT REPORTS MATRIX</span>
+              <span>VIEW FULL REPORTS</span>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -333,10 +347,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
         <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20 flex flex-col justify-between">
           <div>
             <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
-              Command Actions
+              Quick Navigation
             </h2>
             <p className="tag-mono text-[10px] text-slate-400 mb-3">
-              DIRECT PORTAL SHORTCUTS
+              JUMP TO SECTION
             </p>
           </div>
 
@@ -385,7 +399,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
                 <FileText className="w-4 h-4" />
               </div>
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                Upcoming Examination Slips
+                Upcoming Tests & Exams
               </h2>
             </div>
             <button
@@ -400,14 +414,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
           {upcomingTests.length === 0 ? (
             <div className="text-center py-10 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50">
               <p className="tag-mono text-xs text-slate-500 mb-2">
-                No examination admit slips scheduled.
+                No tests or exams currently scheduled.
               </p>
               <button
                 onClick={() => onNavigate('tests')}
                 className="inline-flex items-center space-x-1.5 tag-mono text-xs text-violet-400 font-bold hover:underline"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>SCHEDULE NEW EVALUATION</span>
+                <span>SCHEDULE TEST</span>
               </button>
             </div>
           ) : (
@@ -454,7 +468,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
                 <CheckSquare className="w-4 h-4" />
               </div>
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                Active Assignment Vouchers
+                Active Assignments
               </h2>
             </div>
             <button
@@ -469,14 +483,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
           {pendingTasks.length === 0 ? (
             <div className="text-center py-10 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50">
               <p className="tag-mono text-xs text-slate-500 mb-2">
-                No active assignment vouchers pending.
+                No assignments pending.
               </p>
               <button
                 onClick={() => onNavigate('tasks')}
                 className="inline-flex items-center space-x-1.5 tag-mono text-xs text-violet-400 font-bold hover:underline"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>ISSUE COURSEWORK VOUCHER</span>
+                <span>CREATE ASSIGNMENT</span>
               </button>
             </div>
           ) : (
@@ -501,7 +515,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
                   </div>
                   <div className="flex items-center space-x-2 mt-2 tag-mono text-[10px] text-slate-500">
                     <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
-                      {t.assignedTo === 'all' ? 'ALL STUDENTS' : `${t.assignedStudentIds?.length || 0} RECIPIENTS`}
+                      {t.assignedTo === 'all' ? 'ALL STUDENTS' : `${t.assignedStudentIds?.length || 0} ASSIGNED`}
                     </span>
                     <span>•</span>
                     <span className="text-violet-400">{getDaysDiff(t.dueDate)}</span>
@@ -512,6 +526,99 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate, onOp
           )}
         </div>
       </div>
+
+      {/* Quick Student Report Search Lookup Modal */}
+      {showLookupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl ticket-pass bg-slate-950 border-violet-500/40 p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <button
+              onClick={() => setShowLookupModal(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white uppercase tag-mono">
+                  Search Student Report
+                </h3>
+                <p className="tag-mono text-[10px] text-slate-400">
+                  Search for a student to view their attendance record and academic report.
+                </p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <input
+                type="text"
+                autoFocus
+                value={lookupQuery}
+                onChange={(e) => setLookupQuery(e.target.value)}
+                placeholder="Search by student name, roll number, or batch..."
+                className="w-full pl-10 pr-3.5 py-2.5 text-xs font-mono rounded-xl border border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500 focus:border-violet-500 outline-hidden"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[360px]">
+              {students
+                .filter((s) => {
+                  const q = lookupQuery.toLowerCase().trim();
+                  if (!q) return true;
+                  return (
+                    s.fullName.toLowerCase().includes(q) ||
+                    (s.rollNumber && s.rollNumber.toLowerCase().includes(q)) ||
+                    (s.batch && s.batch.toLowerCase().includes(q)) ||
+                    s.email.toLowerCase().includes(q)
+                  );
+                })
+                .map((st) => (
+                  <div
+                    key={st.id}
+                    onClick={() => {
+                      setShowLookupModal(false);
+                      setSelectedReportStudentId(st.id);
+                    }}
+                    className="p-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-violet-500/40 transition cursor-pointer flex items-center justify-between group"
+                  >
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase group-hover:text-violet-300 transition">
+                        {st.fullName}
+                      </h4>
+                      <div className="tag-mono text-[10px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                        <span>{st.rollNumber || 'NO ROLL'}</span>
+                        <span>•</span>
+                        <span className="text-violet-400">{st.batch || 'ICT-CORE'}</span>
+                        <span>•</span>
+                        <span className="text-slate-500">{st.email}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="px-2.5 py-1 rounded-lg tag-mono text-[10px] font-bold bg-violet-600/20 text-violet-300 group-hover:bg-violet-600 group-hover:text-white transition flex items-center space-x-1"
+                    >
+                      <span>VIEW REPORT</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Report Modal */}
+      {selectedReportStudentId && (
+        <StudentReportModal
+          studentId={selectedReportStudentId}
+          onClose={() => setSelectedReportStudentId(null)}
+        />
+      )}
     </div>
   );
 };

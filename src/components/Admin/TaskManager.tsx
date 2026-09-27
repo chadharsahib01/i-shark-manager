@@ -10,7 +10,9 @@ import {
   Clock,
   X,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Search,
+  Filter
 } from 'lucide-react';
 import { TaskItem, UserProfile } from '../../types';
 import {
@@ -29,6 +31,8 @@ export const TaskManager: React.FC = () => {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'overdue'>('all');
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -86,7 +90,7 @@ export const TaskManager: React.FC = () => {
         createdBy: currentUser?.uid || 'admin'
       });
 
-      setToastMessage('Task assignment voucher committed to ledger.');
+      setToastMessage('Assignment created successfully.');
       setTimeout(() => setToastMessage(null), 3000);
 
       // Reset and close
@@ -134,7 +138,7 @@ export const TaskManager: React.FC = () => {
         assignedStudentIds: assignedTo === 'selected' ? selectedStudentIds : []
       });
 
-      setToastMessage('Task assignment voucher updated.');
+      setToastMessage('Assignment updated successfully.');
       setTimeout(() => setToastMessage(null), 3000);
       setEditModalOpen(false);
       await fetchTasksAndStudents();
@@ -150,7 +154,7 @@ export const TaskManager: React.FC = () => {
     setIsSubmitting(true);
     try {
       await deleteTask(selectedTask.id);
-      setToastMessage('Task voucher removed from registry.');
+      setToastMessage('Assignment deleted successfully.');
       setTimeout(() => setToastMessage(null), 3000);
       setDeleteModalOpen(false);
       await fetchTasksAndStudents();
@@ -170,6 +174,17 @@ export const TaskManager: React.FC = () => {
   };
 
   const todayStr = getLocalDateString();
+
+  const filteredTasks = tasks.filter((t) => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    const diffDays = getDaysDiffLocal(t.dueDate, todayStr);
+    if (statusFilter === 'overdue') return diffDays < 0;
+    if (statusFilter === 'active') return diffDays >= 0;
+    return true;
+  });
 
   const getDaysBadge = (dueDateStr: string) => {
     const diffDays = getDaysDiffLocal(dueDateStr, todayStr);
@@ -205,16 +220,16 @@ export const TaskManager: React.FC = () => {
             <div className="flex items-center space-x-2 mb-1.5">
               <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
                 <Sparkles className="w-3 h-3 text-violet-400" />
-                <span>COURSEWORK DISTRIBUTION VOUCHER</span>
+                <span>ASSIGNMENTS & TASKS</span>
               </span>
-              <span className="tag-mono text-[9px] text-slate-500">ASSIGNMENTS</span>
+              <span className="tag-mono text-[9px] text-slate-500">COURSEWORK</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center space-x-2">
               <CheckSquare className="w-6 h-6 text-violet-400" />
-              <span>Task Assignments</span>
+              <span>Assignments & Tasks</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Dispatch problem sets, practical lab projects, and coursework to specific or cohort rosters.
+              Create and assign coursework, projects, or homework to students.
             </p>
           </div>
 
@@ -232,7 +247,7 @@ export const TaskManager: React.FC = () => {
             className="glow-orb-btn px-4 py-2.5 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 flex items-center space-x-2 cursor-pointer shrink-0 shadow-lg shadow-violet-900/40"
           >
             <Plus className="w-4 h-4" />
-            <span className="uppercase">Issue Task Voucher</span>
+            <span className="uppercase">Create Assignment</span>
           </button>
         </div>
       </div>
@@ -245,22 +260,51 @@ export const TaskManager: React.FC = () => {
         </div>
       )}
 
-      {/* Task List: Ticket Cards */}
+      {/* Search and Status Filter Bar */}
+      <div className="ticket-pass p-4 bg-slate-900/90 border-violet-500/20 flex flex-col md:flex-row items-center gap-3">
+        <div className="relative w-full md:flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tasks by title, deliverables, or keywords..."
+            className="w-full pl-10 pr-3.5 py-2 text-xs font-mono rounded-xl border border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500 focus:border-violet-500 outline-hidden"
+          />
+        </div>
+
+        <div className="flex items-center space-x-2 w-full md:w-auto">
+          <Filter className="w-4 h-4 text-violet-400 shrink-0 hidden sm:block" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="py-2 px-3 text-xs tag-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-slate-200 outline-hidden w-full md:w-auto focus:border-violet-500"
+          >
+            <option value="all">ALL DEADLINES ({tasks.length})</option>
+            <option value="active">ACTIVE TASKS</option>
+            <option value="overdue">OVERDUE</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Task List: Cards */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : tasks.length === 0 ? (
+      ) : filteredTasks.length === 0 ? (
         <div className="text-center py-16 px-4 rounded-3xl ticket-pass bg-slate-900/90 border-slate-800 text-slate-400">
           <CheckSquare className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-white uppercase tag-mono">No Task Vouchers Found</h3>
+          <h3 className="text-sm font-bold text-white uppercase tag-mono">No Assignments Found</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-            Issue an assignment voucher to distribute tasks across students.
+            {searchQuery || statusFilter !== 'all'
+              ? 'Try adjusting your search query or status filter.'
+              : 'Create an assignment to distribute coursework and tasks to students.'}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <div
               key={task.id}
               className="ticket-pass p-0 bg-slate-950 border-violet-500/30 flex flex-col justify-between hover:border-violet-500/60 transition-all duration-300 shadow-xl"
@@ -291,11 +335,11 @@ export const TaskManager: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="tag-mono text-[9px] text-slate-500 flex items-center space-x-1">
                       <Users className="w-3 h-3 text-emerald-400" />
-                      <span>ALLOCATION:</span>
+                      <span>ASSIGNED TO:</span>
                     </span>
                     <span className="tag-mono text-[10px] font-bold text-violet-300">
                       {task.assignedTo === 'all'
-                        ? 'ALL ACTIVE STUDENTS'
+                        ? 'ALL STUDENTS'
                         : `${task.assignedStudentIds?.length || 0} RECIPIENTS`}
                     </span>
                   </div>
@@ -314,7 +358,7 @@ export const TaskManager: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <div className="ticket-barcode-graphic text-slate-400 w-16" />
                   <span className="tag-mono text-[8px] text-slate-500">
-                    VOUCHER #{task.id.slice(0, 6)}
+                    TASK #{task.id.slice(0, 6)}
                   </span>
                 </div>
 
@@ -359,10 +403,10 @@ export const TaskManager: React.FC = () => {
             </button>
 
             <h2 className="text-base font-black text-white uppercase tag-mono mb-1">
-              {createModalOpen ? 'Issue Task Voucher' : 'Modify Task Voucher'}
+              {createModalOpen ? 'Create Assignment' : 'Edit Assignment'}
             </h2>
             <p className="tag-mono text-[10px] text-slate-400 mb-4">
-              Enter coursework specifications and target student assignees.
+              Enter assignment details and select student recipients.
             </p>
 
             {formError && (
@@ -375,7 +419,7 @@ export const TaskManager: React.FC = () => {
             <form onSubmit={createModalOpen ? handleCreateTask : handleUpdateTask} className="space-y-4">
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  TASK TITLE *
+                  ASSIGNMENT TITLE *
                 </label>
                 <div className="inset-field">
                   <input
@@ -391,7 +435,7 @@ export const TaskManager: React.FC = () => {
 
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  SUBMISSION CRITERIA & GUIDELINES *
+                  DESCRIPTION & INSTRUCTIONS *
                 </label>
                 <div className="inset-field">
                   <textarea
@@ -399,7 +443,7 @@ export const TaskManager: React.FC = () => {
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Specify project objectives, deliverables, and repo format..."
+                    placeholder="Specify project objectives, deliverables, and requirements..."
                     className="text-xs w-full bg-transparent outline-hidden text-slate-100 placeholder:text-slate-600 resize-none"
                   />
                 </div>
@@ -422,7 +466,7 @@ export const TaskManager: React.FC = () => {
 
               <div>
                 <label className="block tag-mono text-[10px] text-slate-400 mb-1">
-                  TARGET ALLOCATION
+                  ASSIGN TO
                 </label>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
@@ -434,7 +478,7 @@ export const TaskManager: React.FC = () => {
                         : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
                     }`}
                   >
-                    ALL ACTIVE STUDENTS
+                    ALL STUDENTS
                   </button>
                   <button
                     type="button"
@@ -494,7 +538,7 @@ export const TaskManager: React.FC = () => {
                   disabled={isSubmitting}
                   className="glow-orb-btn px-5 py-2 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 disabled:opacity-50 transition cursor-pointer uppercase shadow-lg shadow-violet-900/40"
                 >
-                  {isSubmitting ? 'DISPATCHING...' : createModalOpen ? 'DISPATCH VOUCHER' : 'SAVE CHANGES'}
+                  {isSubmitting ? 'SAVING...' : createModalOpen ? 'CREATE ASSIGNMENT' : 'SAVE CHANGES'}
                 </button>
               </div>
             </form>
@@ -506,9 +550,9 @@ export const TaskManager: React.FC = () => {
       {deleteModalOpen && selectedTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in">
           <div className="w-full max-w-sm rounded-2xl ticket-pass bg-slate-950 border-rose-500/40 p-6 shadow-2xl">
-            <h3 className="text-sm font-bold text-white uppercase tag-mono mb-2">Delete Assignment Voucher</h3>
-            <p className="tag-mono text-xs text-slate-400 mb-5 leading-relaxed">
-              Confirm purge of voucher <strong>"{selectedTask.title}"</strong> from institutional records?
+            <h3 className="text-sm font-bold text-white uppercase tag-mono mb-2">Delete Assignment</h3>
+            <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+              Are you sure you want to delete assignment <strong>"{selectedTask.title}"</strong>? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-2">
               <button
@@ -522,7 +566,7 @@ export const TaskManager: React.FC = () => {
                 disabled={isSubmitting}
                 className="px-4 py-2 tag-mono text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-md disabled:opacity-50 transition cursor-pointer"
               >
-                {isSubmitting ? 'PURGING...' : 'CONFIRM PURGE'}
+                {isSubmitting ? 'DELETING...' : 'DELETE ASSIGNMENT'}
               </button>
             </div>
           </div>

@@ -31,6 +31,7 @@ import {
   calculateAttendanceSummary
 } from '../../services/firestoreService';
 import { getLocalDateString, getDaysDiffLocal } from '../../utils/dateUtils';
+import { StudentReportModal } from '../StudentReportModal';
 
 interface StudentDashboardProps {
   currentTab?: string;
@@ -43,6 +44,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [tests, setTests] = useState<TestItem[]>([]);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
 
   // Independent error states
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
@@ -172,7 +174,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   const isGoodStanding = isPercentNumeric && (overallSummary.percentage as number) >= 75;
 
   /* =========================================================================
-     1. STUDENT BOARDING PASS TICKET (Inspiration 1)
+     1. STUDENT OVERVIEW CARD
      ========================================================================= */
   const StudentBoardingPass = (
     <div className="ticket-pass holo-sheen p-0 bg-slate-950 border-violet-500/30 shadow-2xl relative">
@@ -183,9 +185,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
             <div className="flex items-center space-x-2.5 mb-2">
               <span className="tag-mono px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40 font-bold flex items-center space-x-1">
                 <Sparkles className="w-3 h-3 text-violet-400" />
-                <span>OFFICIAL ACADEMIC BOARDING PASS</span>
+                <span>STUDENT PROFILE</span>
               </span>
-              <span className="tag-mono text-[9px] text-slate-500">TERM 2026-A</span>
+              <span className="tag-mono text-[9px] text-slate-500">TERM 2026</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">
               {userProfile?.fullName || 'Enrolled Student'}
@@ -197,6 +199,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
 
           {/* Quick Badges */}
           <div className="flex flex-wrap sm:flex-col items-start sm:items-end gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowReportModal(true)}
+              className="tag-mono px-3 py-1.5 rounded-lg bg-violet-600/30 hover:bg-violet-600 border border-violet-500/50 text-violet-200 hover:text-white flex items-center space-x-1.5 transition cursor-pointer shadow-sm"
+              title="View & Download Official Academic Report"
+            >
+              <FileText className="w-3.5 h-3.5 text-violet-300" />
+              <span>VIEW FULL REPORT</span>
+            </button>
             <span className="tag-mono px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 flex items-center space-x-1.5 shadow-inner">
               <Hash className="w-3.5 h-3.5 text-violet-400" />
               <span>ROLL: {userProfile?.rollNumber || 'NOT ASSIGNED'}</span>
@@ -213,31 +224,31 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
           <div>
             <span className="tag-mono text-[9px] text-slate-500 block">ENROLLMENT STATUS</span>
             <span className="font-mono font-bold text-emerald-400 flex items-center mt-0.5">
-              <Check className="w-3.5 h-3.5 mr-1" /> VALIDATED
+              <Check className="w-3.5 h-3.5 mr-1" /> ACTIVE
             </span>
           </div>
           <div>
-            <span className="tag-mono text-[9px] text-slate-500 block">SESSIONS RECORDED</span>
+            <span className="tag-mono text-[9px] text-slate-500 block">CLASSES RECORDED</span>
             <span className="font-mono font-bold text-slate-200 mt-0.5 block">
-              {overallSummary.total} Sessions Logged
+              {overallSummary.total} Total Recorded
             </span>
           </div>
           <div>
             <span className="tag-mono text-[9px] text-slate-500 block">PENDING TASKS</span>
             <span className="font-mono font-bold text-violet-400 mt-0.5 block">
-              {sortedTasks.length} Vouchers Active
+              {sortedTasks.length} Active Tasks
             </span>
           </div>
           <div>
             <span className="tag-mono text-[9px] text-slate-500 block">UPCOMING TESTS</span>
             <span className="font-mono font-bold text-rose-400 mt-0.5 block">
-              {upcomingTests.length} Admit Slips
+              {upcomingTests.length} Scheduled
             </span>
           </div>
         </div>
       </div>
 
-      {/* Ticket Perforation Divider */}
+      {/* Perforation Divider */}
       <div className="ticket-perforation-divider bg-slate-950">
         <div className="ticket-notch-left" />
         <div className="ticket-dashed-line" />
@@ -250,10 +261,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
           <div className="ticket-barcode-graphic text-slate-300 w-32 shrink-0" />
           <div className="min-w-0">
             <span className="tag-mono text-[8px] text-slate-500 tracking-widest block">
-              UID: {studentId.slice(0, 16)}...
+              ID: {studentId.slice(0, 16)}...
             </span>
             <span className="text-[11px] text-slate-400 font-mono">
-              STAND: {isGoodStanding ? 'APPROVED FOR EXAMS' : 'ATTENDANCE DEFICIT'}
+              STATUS: {isGoodStanding ? 'ELIGIBLE FOR EXAMS' : 'BELOW 75% REQUIREMENT'}
             </span>
           </div>
         </div>
@@ -261,7 +272,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
         <div className="flex items-center space-x-6 w-full sm:w-auto justify-between sm:justify-end">
           <div className="text-right">
             <span className="tag-mono text-[8px] text-slate-400 uppercase tracking-widest block">
-              ADMIT PERCENTAGE
+              ATTENDANCE RATE
             </span>
             <span className={`text-4xl font-black font-mono tracking-tight leading-none ${isGoodStanding ? 'text-violet-400' : 'text-rose-400'}`}>
               {overallSummary.percentage}{isPercentNumeric ? '%' : ''}
@@ -277,7 +288,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   );
 
   /* =========================================================================
-     2. MEETING-CARD CALENDAR DAY STRIP (Inspiration 2)
+     2. WEEKLY ATTENDANCE STRIP
      ========================================================================= */
   const CalendarDayStripCard = (
     <div className="ticket-pass p-5 bg-slate-900/90 border-violet-500/20">
@@ -285,14 +296,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
         <div>
           <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
             <CalendarCheck className="w-4 h-4 text-violet-400" />
-            <span>Weekly Turnout Timeline</span>
+            <span>Weekly Attendance</span>
           </h2>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            Real-time daily presence markers and session timestamps
+            Your daily attendance and check-in times for this week
           </p>
         </div>
 
-        {/* Date Selector Pill (Inspiration 2) */}
+        {/* Date Selector Pill */}
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 shadow-inner">
           <Calendar className="w-3.5 h-3.5 text-violet-400" />
           <span>{new Date().toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
@@ -328,7 +339,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
         })}
       </div>
 
-      {/* Dashed Indicator Connector Timeline (Inspiration 2) */}
+      {/* Indicator Connector Timeline */}
       <div className="calendar-timeline-container my-1">
         <div className="calendar-timeline-line" />
         {weekDays.map((day) => {
@@ -392,7 +403,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
       {/* Present */}
       <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-emerald-500/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
-          <span className="tag-mono text-slate-400">PRESENT DAYS</span>
+          <span className="tag-mono text-slate-400">PRESENT</span>
           <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <CheckCircle2 className="w-4 h-4" />
           </div>
@@ -402,7 +413,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
             {overallSummary.present}
           </span>
           <span className="text-xs text-emerald-400 ml-1.5 font-mono">
-            ON-TIME
+            ON TIME
           </span>
         </div>
       </div>
@@ -410,7 +421,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
       {/* Late */}
       <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-amber-500/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
-          <span className="tag-mono text-slate-400">DELAYED DAYS</span>
+          <span className="tag-mono text-slate-400">LATE</span>
           <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
             <Clock className="w-4 h-4" />
           </div>
@@ -420,7 +431,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
             {overallSummary.late}
           </span>
           <span className="text-xs text-amber-400 ml-1.5 font-mono">
-            DELAYED
+            LATE
           </span>
         </div>
       </div>
@@ -428,7 +439,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
       {/* Absent */}
       <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-rose-500/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
-          <span className="tag-mono text-slate-400">UNEXCUSED</span>
+          <span className="tag-mono text-slate-400">ABSENT</span>
           <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
             <XCircle className="w-4 h-4" />
           </div>
@@ -446,7 +457,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
       {/* Leave */}
       <div className="ticket-pass p-4 sm:p-5 bg-slate-900/90 border-sky-500/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
-          <span className="tag-mono text-slate-400">AUTHORIZED</span>
+          <span className="tag-mono text-slate-400">LEAVE</span>
           <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
             <AlertCircle className="w-4 h-4" />
           </div>
@@ -456,7 +467,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
             {overallSummary.leave}
           </span>
           <span className="text-xs text-sky-400 ml-1.5 font-mono">
-            LEAVE
+            APPROVED
           </span>
         </div>
       </div>
@@ -464,7 +475,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   );
 
   /* =========================================================================
-     4. TASK VOUCHERS (Inspiration 1 & 3)
+     4. ASSIGNMENTS & TASKS
      ========================================================================= */
   const TasksSection = (
     <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
@@ -475,13 +486,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
           </div>
           <div>
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-              Coursework Assignment Vouchers
+              Assignments & Tasks
             </h2>
-            <span className="tag-mono text-[9px] text-slate-400">ACTIVE PROJECT DELIVERABLES</span>
+            <span className="tag-mono text-[9px] text-slate-400">ACTIVE COURSEWORK</span>
           </div>
         </div>
         <span className="tag-mono px-2.5 py-1 rounded-md bg-slate-800 text-violet-300 border border-slate-700">
-          {sortedTasks.length} VOUCHERS
+          {sortedTasks.length} TASKS
         </span>
       </div>
 
@@ -494,10 +505,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
         <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50">
           <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
           <p className="text-xs font-bold text-slate-200">
-            All coursework vouchers completed!
+            All assignments completed!
           </p>
           <p className="tag-mono text-[10px] text-slate-500 mt-1">
-            NO PENDING ASSIGNMENTS DETECTED ON MATRIX
+            NO PENDING TASKS
           </p>
         </div>
       ) : (
@@ -548,9 +559,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
                 <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
                   <span className="flex items-center space-x-1">
                     <Calendar className="w-3 h-3 text-violet-400" />
-                    <span>DEADLINE: {task.dueDate}</span>
+                    <span>DUE DATE: {task.dueDate}</span>
                   </span>
-                  <span className="tag-mono text-slate-500">VC-ID: #{task.id.slice(0, 6)}</span>
+                  <span className="tag-mono text-slate-500">TASK #{task.id.slice(0, 6)}</span>
                 </div>
               </div>
             );
@@ -561,7 +572,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   );
 
   /* =========================================================================
-     5. TEST ADMIT SLIPS (Inspiration 1)
+     5. TESTS & EXAMS
      ========================================================================= */
   const TestsSection = (
     <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
@@ -572,13 +583,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
           </div>
           <div>
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-              Examination Admit Slips
+              Tests & Examinations
             </h2>
-            <span className="tag-mono text-[9px] text-slate-400">UPCOMING EVALUATIONS</span>
+            <span className="tag-mono text-[9px] text-slate-400">UPCOMING SCHEDULE</span>
           </div>
         </div>
         <span className="tag-mono px-2.5 py-1 rounded-md bg-slate-800 text-violet-300 border border-slate-700">
-          {upcomingTests.length} SLIPS
+          {upcomingTests.length} TESTS
         </span>
       </div>
 
@@ -590,7 +601,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
       ) : upcomingTests.length === 0 ? (
         <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50">
           <p className="text-xs text-slate-400 font-mono">
-            No examination admit slips scheduled. Matrix clear!
+            No upcoming tests or examinations scheduled.
           </p>
         </div>
       ) : (
@@ -644,7 +655,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
                       <span>{test.time}</span>
                     </span>
                   </div>
-                  <span className="tag-mono text-[9px] text-emerald-400">SEAT: ASSIGNED</span>
+                  <span className="tag-mono text-[9px] text-emerald-400">STATUS: SCHEDULED</span>
                 </div>
 
                 {test.syllabus && (
@@ -661,7 +672,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
   );
 
   /* =========================================================================
-     6. ATTENDANCE HISTORY SECTION
+     6. ATTENDANCE HISTORY
      ========================================================================= */
   const AttendanceHistorySection = (
     <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
@@ -669,9 +680,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
         <div>
           <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
             <CalendarCheck className="w-4 h-4 text-violet-400" />
-            <span>Attendance Registry Archive</span>
+            <span>Attendance History</span>
           </h2>
-          <span className="tag-mono text-[9px] text-slate-400">HISTORICAL BIOMETRIC TIMESTAMPS</span>
+          <span className="tag-mono text-[9px] text-slate-400">PAST ATTENDANCE RECORDS</span>
         </div>
 
         <div className="flex items-center space-x-3 text-xs">
@@ -682,7 +693,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
               onChange={(e) => setViewAllMonths(e.target.checked)}
               className="rounded border-slate-700 bg-slate-900 text-violet-600 focus:ring-violet-500"
             />
-            <span>SHOW ALL ARCHIVES</span>
+            <span>SHOW ALL MONTHS</span>
           </label>
 
           {!viewAllMonths && (
@@ -703,18 +714,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
         </div>
       ) : filteredAttendance.length === 0 ? (
         <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 text-xs text-slate-500 font-mono">
-          NO TIMESTAMPS LOGGED FOR THIS PERIOD.
+          NO ATTENDANCE RECORDS FOUND FOR THIS PERIOD.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider tag-mono">
-                <th className="py-3 px-4">TIMESTAMP</th>
+                <th className="py-3 px-4">DATE</th>
                 <th className="py-3 px-4">STATUS</th>
-                <th className="py-3 px-4">GATE IN</th>
-                <th className="py-3 px-4">GATE OUT</th>
-                <th className="py-3 px-4">INSTRUCTOR LOG</th>
+                <th className="py-3 px-4">TIME IN</th>
+                <th className="py-3 px-4">TIME OUT</th>
+                <th className="py-3 px-4">NOTES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 font-mono">
@@ -743,7 +754,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
                   </td>
                   <td className="py-3 px-4 text-slate-300">{rec.inTime || '—'}</td>
                   <td className="py-3 px-4 text-slate-300">{rec.outTime || '—'}</td>
-                  <td className="py-3 px-4 text-slate-500 italic">
+                  <td className="py-3 px-4 text-slate-400">
                     {rec.notes || '—'}
                   </td>
                 </tr>
@@ -759,43 +770,48 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentTab =
      TAB ROUTING
      ========================================================================= */
 
-  if (currentTab === 'attendance') {
-    return (
-      <div className="space-y-6">
-        {CalendarDayStripCard}
-        {AttendanceMetricCards}
-        {AttendanceHistorySection}
-      </div>
-    );
-  }
-
-  if (currentTab === 'tasks') {
-    return (
-      <div className="space-y-6">
-        {TasksSection}
-      </div>
-    );
-  }
-
-  if (currentTab === 'tests') {
-    return (
-      <div className="space-y-6">
-        {TestsSection}
-      </div>
-    );
-  }
-
-  // Default: Dashboard Overview
   return (
-    <div className="space-y-6">
-      {StudentBoardingPass}
-      {CalendarDayStripCard}
-      {AttendanceMetricCards}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {TasksSection}
-        {TestsSection}
-      </div>
-      {AttendanceHistorySection}
-    </div>
+    <>
+      {currentTab === 'attendance' && (
+        <div className="space-y-6">
+          {CalendarDayStripCard}
+          {AttendanceMetricCards}
+          {AttendanceHistorySection}
+        </div>
+      )}
+
+      {currentTab === 'tasks' && (
+        <div className="space-y-6">
+          {TasksSection}
+        </div>
+      )}
+
+      {currentTab === 'tests' && (
+        <div className="space-y-6">
+          {TestsSection}
+        </div>
+      )}
+
+      {currentTab !== 'attendance' && currentTab !== 'tasks' && currentTab !== 'tests' && (
+        <div className="space-y-6">
+          {StudentBoardingPass}
+          {CalendarDayStripCard}
+          {AttendanceMetricCards}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {TasksSection}
+            {TestsSection}
+          </div>
+          {AttendanceHistorySection}
+        </div>
+      )}
+
+      {/* Single Student Official Report Modal */}
+      {showReportModal && (userProfile?.id || currentUser?.uid) && (
+        <StudentReportModal
+          studentId={userProfile?.id || currentUser?.uid || ''}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+    </>
   );
 };

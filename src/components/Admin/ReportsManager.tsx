@@ -12,9 +12,15 @@ import {
   XCircle,
   AlertCircle,
   Percent,
-  Sparkles
+  Sparkles,
+  Printer,
+  X,
+  Image as ImageIcon,
+  FileImage,
+  Sliders,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { jsPDF } from 'jspdf';
 import {
   UserProfile,
   AttendanceRecord,
@@ -27,6 +33,25 @@ import {
   calculateAttendanceSummary
 } from '../../services/firestoreService';
 import { getLocalDateString } from '../../utils/dateUtils';
+import {
+  generateAttendancePDF,
+  downloadAttendancePDF,
+  formatMonthName
+} from '../../utils/pdfExport';
+import {
+  generateAttendanceCanvas,
+  downloadAttendanceImage,
+} from '../../utils/imageExport';
+import {
+  DateRangePresetId,
+  getPresetDateRange,
+  formatRangeDisplay,
+  getDateRangeSlug,
+} from '../../utils/datePresets';
+import { DateRangeFilter } from './DateRangeFilter';
+import { StudentReportModal } from '../StudentReportModal';
+import { ExportPdfModal } from './ExportPdfModal';
+import { ExportImageModal } from './ExportImageModal';
 
 export const ReportsManager: React.FC = () => {
   const [students, setStudents] = useState<UserProfile[]>([]);
@@ -35,8 +60,29 @@ export const ReportsManager: React.FC = () => {
 
   // Filters
   const [selectedStudentId, setSelectedStudentId] = useState<string>('all');
-  const currentYearMonth = getLocalDateString().substring(0, 7);
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentYearMonth);
+  const initialPresetRange = useMemo(() => getPresetDateRange('thisMonth'), []);
+  const [presetId, setPresetId] = useState<DateRangePresetId>('thisMonth');
+  const [startDate, setStartDate] = useState<string>(initialPresetRange.startDate);
+  const [endDate, setEndDate] = useState<string>(initialPresetRange.endDate);
+  const [calendarMonth, setCalendarMonth] = useState<string>(initialPresetRange.startDate.substring(0, 7));
+  const [modalStudentId, setModalStudentId] = useState<string | null>(null);
+
+  const periodLabel = useMemo(() => {
+    return formatRangeDisplay(startDate, endDate, presetId);
+  }, [startDate, endDate, presetId]);
+
+  const filePeriodKey = useMemo(() => {
+    return getDateRangeSlug(startDate, endDate, presetId);
+  }, [startDate, endDate, presetId]);
+
+  const handleRangeChange = (newStart: string, newEnd: string, newPreset: DateRangePresetId) => {
+    setStartDate(newStart);
+    setEndDate(newEnd);
+    setPresetId(newPreset);
+    if (newStart) {
+      setCalendarMonth(newStart.substring(0, 7));
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -58,15 +104,15 @@ export const ReportsManager: React.FC = () => {
     fetchData();
   }, []);
 
-  // Filtered records matching month and student
+  // Filtered records matching date range and student
   const filteredRecords = useMemo(() => {
     return allRecords.filter((rec) => {
-      const matchesMonth = rec.date.startsWith(selectedMonth);
+      const inRange = rec.date >= startDate && rec.date <= endDate;
       const matchesStudent =
         selectedStudentId === 'all' || rec.studentId === selectedStudentId;
-      return matchesMonth && matchesStudent;
+      return inRange && matchesStudent;
     });
-  }, [allRecords, selectedMonth, selectedStudentId]);
+  }, [allRecords, startDate, endDate, selectedStudentId]);
 
   // Attendance summary metrics
   const summary: AttendanceSummary = useMemo(() => {
@@ -76,9 +122,9 @@ export const ReportsManager: React.FC = () => {
   // Selected student details if single student
   const currentStudent = students.find((s) => s.id === selectedStudentId);
 
-  // Calendar matrix calculation for the selected month
+  // Calendar matrix calculation for the active calendarMonth
   const calendarData = useMemo(() => {
-    const [yearStr, monthStr] = selectedMonth.split('-');
+    const [yearStr, monthStr] = calendarMonth.split('-');
     const year = parseInt(yearStr, 10);
     const month = parseInt(monthStr, 10) - 1; // 0-indexed
 
@@ -93,7 +139,7 @@ export const ReportsManager: React.FC = () => {
 
     // Day slots
     for (let day = 1; day <= totalDaysInMonth; day++) {
-      const dateStr = `${selectedMonth}-${String(day).padStart(2, '0')}`;
+      const dateStr = `${calendarMonth}-${String(day).padStart(2, '0')}`;
       const dayRecords = filteredRecords.filter((r) => r.date === dateStr);
       days.push({
         dayNumber: day,
@@ -103,14 +149,27 @@ export const ReportsManager: React.FC = () => {
     }
 
     return days;
-  }, [selectedMonth, filteredRecords]);
+  }, [calendarMonth, filteredRecords]);
+
+  // Notification state
+  const [notification, setNotification] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState<boolean>(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState<boolean>(false);
+  const [imageModalFormat, setImageModalFormat] = useState<'png' | 'jpg'>('png');
+
+  const showNotification = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setNotification({ text, type });
+    setTimeout(() => {
+      setNotification((curr) => (curr?.text === text ? null : curr));
+    }, 4000);
+  };
 
   /* =========================================================================
      EXPORT TO CSV
      ========================================================================= */
   const exportToCSV = () => {
     if (filteredRecords.length === 0) {
-      alert('No records available to export for this selection.');
+      showNotification('No attendance records available to export for this selection.', 'error');
       return;
     }
 
@@ -146,87 +205,123 @@ export const ReportsManager: React.FC = () => {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     const studentTag = selectedStudentId === 'all' ? 'all-students' : currentStudent?.fullName.replace(/\s+/g, '_') || 'student';
-    link.setAttribute('download', `attendance_audit_${selectedMonth}_${studentTag}.csv`);
+    const filename = `attendance_report_${filePeriodKey}_${studentTag}.csv`;
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    showNotification(`CSV exported successfully: ${filename}`);
   };
 
   /* =========================================================================
-     EXPORT TO PDF
+     EXPORT TO PDF (Direct Quick Export)
      ========================================================================= */
-  const exportToPDF = () => {
+  const handleQuickPdfDownload = () => {
     if (filteredRecords.length === 0) {
-      alert('No records available to export for this selection.');
+      showNotification('No records available to export for this selection.', 'error');
       return;
     }
 
-    const doc = new jsPDF();
-    const title = 'I-SHARK Institute of Computer Technologies - Attendance Audit';
-    const subTitle = `Period: ${selectedMonth} | Target Scope: ${
-      selectedStudentId === 'all' ? 'All Active Students' : currentStudent?.fullName
-    }`;
+    try {
+      const doc = generateAttendancePDF(
+        {
+          records: filteredRecords,
+          students,
+          summary,
+          month: calendarMonth,
+          startDate,
+          endDate,
+          periodLabel,
+          selectedStudent: currentStudent,
+        },
+        {
+          orientation: 'portrait',
+          includeSummary: true,
+          includeSignatures: true,
+          includeRemarks: true,
+        }
+      );
 
-    // Header styling
-    doc.setFontSize(15);
-    doc.setTextColor(30, 41, 59);
-    doc.text(title, 14, 20);
+      const savedName = downloadAttendancePDF(
+        doc,
+        filePeriodKey,
+        currentStudent?.fullName
+      );
 
-    doc.setFontSize(9);
-    doc.setTextColor(100, 116, 139);
-    doc.text(subTitle, 14, 27);
-    doc.text(`Generated On: ${new Date().toLocaleString()}`, 14, 33);
+      showNotification(`Attendance PDF exported: ${savedName}`);
+    } catch (err) {
+      console.error('Failed to generate quick PDF:', err);
+      showNotification('Failed to generate PDF document.', 'error');
+    }
+  };
 
-    // Summary Box
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(14, 38, 182, 24, 3, 3, 'F');
-    doc.setFontSize(9);
-    doc.setTextColor(51, 65, 85);
-
-    doc.text(`Total Sessions: ${summary.total}`, 20, 46);
-    doc.text(`Present: ${summary.present}`, 65, 46);
-    doc.text(`Late: ${summary.late}`, 110, 46);
-    doc.text(`Absent: ${summary.absent}`, 150, 46);
-
-    doc.setFontSize(11);
-    doc.setTextColor(124, 58, 237);
-    doc.text(`Attendance Percentage: ${summary.percentage}%`, 20, 56);
-
-    // Records Table Header
-    let y = 72;
-    doc.setFontSize(9);
-    doc.setTextColor(15, 23, 42);
-    doc.setFillColor(241, 245, 249);
-    doc.rect(14, y - 5, 182, 8, 'F');
-    doc.text('Date', 16, y);
-    doc.text('Student', 46, y);
-    doc.text('Status', 105, y);
-    doc.text('In-Time', 130, y);
-    doc.text('Out-Time', 155, y);
-
-    y += 8;
-
-    filteredRecords.slice(0, 50).forEach((rec) => {
-      if (y > 275) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.setFontSize(8);
-      doc.setTextColor(71, 85, 105);
-      doc.text(rec.date, 16, y);
-      doc.text(rec.studentName || 'Student', 46, y);
-      doc.text(rec.status, 105, y);
-      doc.text(rec.inTime || '-', 130, y);
-      doc.text(rec.outTime || '-', 155, y);
-      y += 6;
-    });
-
-    if (filteredRecords.length > 50) {
-      doc.text(`... and ${filteredRecords.length - 50} more records (truncated in summary print)`, 16, y + 4);
+  /* =========================================================================
+     EXPORT TO IMAGE (Quick PNG / JPG Direct Download)
+     ========================================================================= */
+  const handleQuickImageDownload = (format: 'png' | 'jpg') => {
+    if (filteredRecords.length === 0) {
+      showNotification(`No records available to export as ${format.toUpperCase()}.`, 'error');
+      return;
     }
 
-    const studentTag = selectedStudentId === 'all' ? 'all_students' : currentStudent?.fullName.replace(/\s+/g, '_') || 'student';
-    doc.save(`attendance_audit_${selectedMonth}_${studentTag}.pdf`);
+    try {
+      const canvas = generateAttendanceCanvas(
+        {
+          records: filteredRecords,
+          students,
+          summary,
+          month: calendarMonth,
+          startDate,
+          endDate,
+          periodLabel,
+          selectedStudent: currentStudent,
+        },
+        {
+          format,
+          theme: 'light',
+          scale: 2,
+          includeSummary: true,
+          includeSignatures: true,
+          includeRemarks: true,
+        }
+      );
+
+      const savedName = downloadAttendanceImage(
+        canvas,
+        format,
+        filePeriodKey,
+        currentStudent?.fullName
+      );
+
+      showNotification(`Attendance ${format.toUpperCase()} exported: ${savedName}`);
+    } catch (err) {
+      console.error(`Failed to generate quick ${format.toUpperCase()}:`, err);
+      showNotification(`Failed to generate ${format.toUpperCase()} image.`, 'error');
+    }
+  };
+
+  /* =========================================================================
+     OPEN PRINTABLE PDF MODAL
+     ========================================================================= */
+  const openPdfExportModal = () => {
+    if (filteredRecords.length === 0) {
+      showNotification('No attendance records to export for this selection.', 'error');
+      return;
+    }
+    setIsPdfModalOpen(true);
+  };
+
+  /* =========================================================================
+     OPEN IMAGE EXPORT MODAL
+     ========================================================================= */
+  const openImageExportModal = (format: 'png' | 'jpg' = 'png') => {
+    if (filteredRecords.length === 0) {
+      showNotification('No attendance records to export for this selection.', 'error');
+      return;
+    }
+    setImageModalFormat(format);
+    setIsImageModalOpen(true);
   };
 
   const getStatusBadge = (status: AttendanceStatus) => {
@@ -245,7 +340,34 @@ export const ReportsManager: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Toast Notification */}
+      {notification && (
+        <div
+          className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl flex items-center space-x-3 text-xs font-mono font-bold transition-all border ${
+            notification.type === 'error'
+              ? 'bg-rose-950/95 text-rose-200 border-rose-500/60'
+              : notification.type === 'info'
+              ? 'bg-sky-950/95 text-sky-200 border-sky-500/60'
+              : 'bg-emerald-950/95 text-emerald-200 border-emerald-500/60'
+          }`}
+        >
+          {notification.type === 'error' ? (
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          )}
+          <span>{notification.text}</span>
+          <button
+            type="button"
+            onClick={() => setNotification(null)}
+            className="p-1 hover:text-white transition cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Header & Export Actions */}
       <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -253,75 +375,130 @@ export const ReportsManager: React.FC = () => {
             <div className="flex items-center space-x-2 mb-1.5">
               <span className="tag-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 flex items-center space-x-1 font-bold">
                 <Sparkles className="w-3 h-3 text-violet-400" />
-                <span>AUDIT MATRIX // TELEMETRY</span>
+                <span>REPORTS & ANALYTICS</span>
               </span>
-              <span className="tag-mono text-[9px] text-slate-500">ANALYTICS</span>
+              <span className="tag-mono text-[9px] text-slate-500">SUMMARY</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight flex items-center space-x-2">
               <BarChart3 className="w-6 h-6 text-violet-400" />
               <span>Attendance Reports & Analytics</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Monthly audit reports, turnout rate analysis, candidate breakdown, and CSV/PDF ledger export.
+              Monthly attendance reports, attendance rates, student summaries, and printable PDF export.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 self-start sm:self-auto">
             <button
               onClick={exportToCSV}
               id="btn-export-csv"
               disabled={filteredRecords.length === 0}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl tag-mono text-xs font-bold bg-slate-950 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center space-x-1.5 disabled:opacity-40 btn-tactile cursor-pointer"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl tag-mono text-xs font-bold bg-slate-950 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center space-x-1.5 disabled:opacity-40 btn-tactile cursor-pointer shrink-0"
+              title="Download attendance ledger as CSV"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-              <span className="hidden sm:inline">EXPORT CSV</span>
+              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+              <span>CSV</span>
             </button>
 
             <button
-              onClick={exportToPDF}
+              onClick={handleQuickPdfDownload}
+              id="btn-quick-pdf"
+              disabled={filteredRecords.length === 0}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl tag-mono text-xs font-bold bg-slate-950 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center space-x-1.5 disabled:opacity-40 btn-tactile cursor-pointer shrink-0"
+              title="Instantly download standard printable PDF"
+            >
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-violet-400 shrink-0" />
+              <span>PDF</span>
+            </button>
+
+            <button
+              onClick={() => handleQuickImageDownload('png')}
+              id="btn-quick-png"
+              disabled={filteredRecords.length === 0}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl tag-mono text-xs font-bold bg-slate-950 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center space-x-1.5 disabled:opacity-40 btn-tactile cursor-pointer shrink-0"
+              title="Instantly download high-res PNG image"
+            >
+              <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400 shrink-0" />
+              <span>PNG</span>
+            </button>
+
+            <button
+              onClick={() => handleQuickImageDownload('jpg')}
+              id="btn-quick-jpg"
+              disabled={filteredRecords.length === 0}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl tag-mono text-xs font-bold bg-slate-950 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition flex items-center space-x-1.5 disabled:opacity-40 btn-tactile cursor-pointer shrink-0"
+              title="Instantly download compact JPG image"
+            >
+              <FileImage className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+              <span>JPG</span>
+            </button>
+
+            <button
+              onClick={() => openImageExportModal('png')}
+              id="btn-export-image"
+              disabled={filteredRecords.length === 0}
+              className="py-1.5 px-2.5 sm:py-2 sm:px-3.5 rounded-xl tag-mono text-xs font-bold text-sky-300 hover:text-white bg-sky-950/70 hover:bg-sky-900 border border-sky-500/40 transition flex items-center space-x-1.5 disabled:opacity-40 cursor-pointer uppercase shadow-md shadow-sky-950/30 shrink-0"
+              title="Customize PNG / JPG image format, theme, and copy or download"
+            >
+              <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400 shrink-0" />
+              <span>IMAGE</span>
+            </button>
+
+            <button
+              onClick={openPdfExportModal}
               id="btn-export-pdf"
               disabled={filteredRecords.length === 0}
-              className="glow-orb-btn py-2 px-3 sm:px-4 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 transition flex items-center space-x-1.5 disabled:opacity-40 cursor-pointer shadow-lg shadow-violet-900/40 uppercase"
+              className="glow-orb-btn py-1.5 px-3 sm:py-2 sm:px-4 text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/40 transition flex items-center space-x-1.5 disabled:opacity-40 cursor-pointer shadow-lg shadow-violet-900/40 uppercase shrink-0"
+              title="Configure orientation, sections, and print or download PDF"
             >
-              <Download className="w-4 h-4" />
-              <span>EXPORT PDF</span>
+              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span>PRINT / PDF</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="ticket-pass p-4 bg-slate-900/90 border-violet-500/20 flex flex-col sm:flex-row items-center gap-4">
-        {/* Month Selector */}
-        <div className="w-full sm:w-auto flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-violet-400 shrink-0" />
-          <span className="tag-mono text-xs text-slate-400">AUDIT MONTH:</span>
-          <input
-            type="month"
-            id="report-month-select"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-1.5 text-xs font-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-white outline-hidden focus:border-violet-500 cursor-pointer"
-          />
-        </div>
+      {/* Filter Bar with Presets & Date Range */}
+      <div className="ticket-pass p-5 bg-slate-900/90 border-violet-500/20 space-y-4">
+        {/* Date Range & Template Presets */}
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          presetId={presetId}
+          onChangeRange={handleRangeChange}
+        />
 
-        {/* Student Selector */}
-        <div className="w-full sm:flex-1 flex items-center space-x-2">
-          <Users className="w-4 h-4 text-violet-400 shrink-0" />
-          <span className="tag-mono text-xs text-slate-400">ROSTER FILTER:</span>
-          <select
-            id="report-student-select"
-            value={selectedStudentId}
-            onChange={(e) => setSelectedStudentId(e.target.value)}
-            className="w-full sm:max-w-xs px-3 py-1.5 text-xs tag-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-white outline-hidden focus:border-violet-500"
-          >
-            <option value="all">ALL ENROLLED STUDENTS ({students.length})</option>
-            {students.map((st) => (
-              <option key={st.id} value={st.id}>
-                {st.fullName.toUpperCase()} {st.rollNumber ? `(${st.rollNumber})` : ''}
-              </option>
-            ))}
-          </select>
+        {/* Student Scope Selector */}
+        <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-2 flex-1">
+            <Users className="w-4 h-4 text-violet-400 shrink-0" />
+            <span className="tag-mono text-xs text-slate-400 font-bold uppercase">STUDENT SCOPE:</span>
+            <select
+              id="report-student-select"
+              value={selectedStudentId}
+              onChange={(e) => setSelectedStudentId(e.target.value)}
+              className="flex-1 sm:max-w-md px-3 py-1.5 text-xs tag-mono font-bold rounded-xl border border-slate-700 bg-slate-950 text-white outline-hidden focus:border-violet-500 cursor-pointer"
+            >
+              <option value="all">ALL STUDENTS ({students.length} ENROLLED)</option>
+              {students.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.fullName.toUpperCase()} {st.rollNumber ? `(${st.rollNumber})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedStudentId !== 'all' && (
+            <button
+              type="button"
+              onClick={() => setModalStudentId(selectedStudentId)}
+              className="px-3.5 py-1.5 rounded-xl bg-violet-600/30 hover:bg-violet-600 border border-violet-500/40 text-violet-200 hover:text-white tag-mono text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer whitespace-nowrap"
+              title="View student report"
+            >
+              <FileText className="w-3.5 h-3.5 text-violet-300" />
+              <span>VIEW STUDENT DOSSIER</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -338,7 +515,7 @@ export const ReportsManager: React.FC = () => {
         </div>
 
         <div className="p-4 rounded-2xl ticket-pass bg-slate-900/90 border-slate-800">
-          <span className="tag-mono text-slate-400 font-bold">TOTAL LOGS</span>
+          <span className="tag-mono text-slate-400 font-bold">TOTAL SESSIONS</span>
           <div className="text-2xl font-black font-mono text-white mt-1">{summary.total}</div>
         </div>
 
@@ -377,14 +554,50 @@ export const ReportsManager: React.FC = () => {
 
       {/* Calendar-Style Monthly View */}
       <div className="ticket-pass p-5 sm:p-6 bg-slate-900/90 border-violet-500/20">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
-            <Calendar className="w-4 h-4 text-violet-400" />
-            <span>
-              Monthly Matrix: {selectedMonth}
-              {currentStudent ? ` — ${currentStudent.fullName}` : ' (Cohort Aggregate)'}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center space-x-3">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+              <Calendar className="w-4 h-4 text-violet-400" />
+              <span>
+                Calendar: {formatMonthName(calendarMonth)}
+                {currentStudent ? ` — ${currentStudent.fullName}` : ' (All Students)'}
+              </span>
+            </h2>
+
+            {/* Calendar Month Navigation Buttons */}
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const [yStr, mStr] = calendarMonth.split('-');
+                  const d = new Date(parseInt(yStr, 10), parseInt(mStr, 10) - 2, 1);
+                  setCalendarMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                }}
+                className="p-1 rounded-md bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer"
+                title="Previous Month"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const [yStr, mStr] = calendarMonth.split('-');
+                  const d = new Date(parseInt(yStr, 10), parseInt(mStr, 10), 1);
+                  setCalendarMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                }}
+                className="p-1 rounded-md bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer"
+                title="Next Month"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="tag-mono text-[10px] text-violet-300 bg-violet-500/10 border border-violet-500/30 px-2.5 py-1 rounded-lg">
+              Active Filter: {periodLabel}
             </span>
-          </h2>
+          </div>
           <div className="hidden sm:flex items-center space-x-3 tag-mono text-[9px] text-slate-400 font-bold">
             <span className="flex items-center space-x-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -428,24 +641,27 @@ export const ReportsManager: React.FC = () => {
               );
             }
 
+            const isDayInRange = item.dateStr ? item.dateStr >= startDate && item.dateStr <= endDate : false;
             const hasRecords = item.records.length > 0;
 
             return (
               <div
                 key={item.dateStr}
                 className={`min-h-[72px] p-2 rounded-lg border transition flex flex-col justify-between ${
-                  hasRecords
+                  isDayInRange
+                    ? 'ring-1 ring-violet-500/50 bg-violet-950/20 border-violet-500/40'
+                    : hasRecords
                     ? 'bg-slate-950 border-slate-800'
-                    : 'bg-slate-950/40 border-slate-900'
+                    : 'bg-slate-950/40 border-slate-900/60 opacity-60'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-slate-200">
+                  <span className={`font-mono text-xs font-bold ${isDayInRange ? 'text-violet-200' : 'text-slate-400'}`}>
                     {item.dayNumber}
                   </span>
                   {hasRecords && (
                     <span className="tag-mono text-[9px] text-violet-400 font-bold">
-                      {item.records.length} logs
+                      {item.records.length} records
                     </span>
                   )}
                 </div>
@@ -498,10 +714,49 @@ export const ReportsManager: React.FC = () => {
 
       {/* Detailed Table View */}
       <div className="ticket-pass p-0 bg-slate-900/90 border-violet-500/20 overflow-hidden">
-        <div className="p-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between">
-          <h3 className="text-xs font-bold text-white uppercase tag-mono">
-            Detailed Dispatch Records ({filteredRecords.length})
-          </h3>
+        <div className="p-4 border-b border-slate-800 bg-slate-950/80 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-xs font-bold text-white uppercase tag-mono">
+              Attendance Records ({filteredRecords.length})
+            </h3>
+            <span className="text-slate-600 text-xs">•</span>
+            <span className="text-[11px] font-mono text-violet-400 font-semibold truncate max-w-xs sm:max-w-md">
+              {periodLabel}
+            </span>
+          </div>
+          {filteredRecords.length > 0 && (
+            <div className="flex items-center space-x-2.5">
+              <button
+                type="button"
+                onClick={openPdfExportModal}
+                className="tag-mono text-[11px] font-bold text-violet-400 hover:text-violet-300 flex items-center space-x-1 transition cursor-pointer"
+                title="Print or export current records to PDF"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>PDF</span>
+              </button>
+              <span className="text-slate-700 text-xs">•</span>
+              <button
+                type="button"
+                onClick={() => openImageExportModal('png')}
+                className="tag-mono text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center space-x-1 transition cursor-pointer"
+                title="Export current records as high-res PNG image"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>PNG</span>
+              </button>
+              <span className="text-slate-700 text-xs">•</span>
+              <button
+                type="button"
+                onClick={() => openImageExportModal('jpg')}
+                className="tag-mono text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center space-x-1 transition cursor-pointer"
+                title="Export current records as compact JPG image"
+              >
+                <FileImage className="w-3.5 h-3.5" />
+                <span>JPG</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -510,7 +765,7 @@ export const ReportsManager: React.FC = () => {
           </div>
         ) : filteredRecords.length === 0 ? (
           <div className="p-8 text-center tag-mono text-xs text-slate-500">
-            No attendance entries logged for this month and roster scope.
+            No attendance entries logged for the selected period ({periodLabel}).
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -518,10 +773,10 @@ export const ReportsManager: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-950/60 text-[10px] font-bold text-slate-400 uppercase tag-mono">
                   <th className="py-3 px-4">DATE</th>
-                  <th className="py-3 px-4">STUDENT CANDIDATE</th>
+                  <th className="py-3 px-4">STUDENT</th>
                   <th className="py-3 px-4">STATUS</th>
-                  <th className="py-3 px-4">GATE IN</th>
-                  <th className="py-3 px-4">GATE OUT</th>
+                  <th className="py-3 px-4">TIME IN</th>
+                  <th className="py-3 px-4">TIME OUT</th>
                   <th className="py-3 px-4">NOTES / REMARKS</th>
                 </tr>
               </thead>
@@ -532,7 +787,15 @@ export const ReportsManager: React.FC = () => {
                       {r.date}
                     </td>
                     <td className="py-3 px-4 font-sans font-bold text-white">
-                      {r.studentName}
+                      <button
+                        type="button"
+                        onClick={() => setModalStudentId(r.studentId)}
+                        className="text-left hover:text-violet-300 hover:underline transition flex items-center space-x-1 cursor-pointer"
+                        title="Click to view full student report"
+                      >
+                        <span>{r.studentName}</span>
+                        <FileText className="w-3 h-3 text-violet-400 opacity-60 inline" />
+                      </button>
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -559,6 +822,49 @@ export const ReportsManager: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Printable PDF Export Modal */}
+      <ExportPdfModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        records={filteredRecords}
+        students={students}
+        summary={summary}
+        month={calendarMonth}
+        startDate={startDate}
+        endDate={endDate}
+        periodLabel={periodLabel}
+        selectedStudent={currentStudent}
+        onSuccessNotification={(msg) => showNotification(msg, 'success')}
+        onSwitchToImage={(fmt) => {
+          setIsPdfModalOpen(false);
+          openImageExportModal(fmt);
+        }}
+      />
+
+      {/* Image (PNG / JPG) Export Modal */}
+      <ExportImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        records={filteredRecords}
+        students={students}
+        summary={summary}
+        month={calendarMonth}
+        startDate={startDate}
+        endDate={endDate}
+        periodLabel={periodLabel}
+        selectedStudent={currentStudent}
+        defaultFormat={imageModalFormat}
+        onSuccessNotification={(msg) => showNotification(msg, 'success')}
+      />
+
+      {/* Single Student Report Modal */}
+      {modalStudentId && (
+        <StudentReportModal
+          studentId={modalStudentId}
+          onClose={() => setModalStudentId(null)}
+        />
+      )}
     </div>
   );
 };

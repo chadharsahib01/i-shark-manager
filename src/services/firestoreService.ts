@@ -19,7 +19,9 @@ import {
   AttendanceStatus,
   TaskItem,
   TestItem,
-  AttendanceSummary
+  AttendanceSummary,
+  MonthlyAttendanceMetric,
+  SingleStudentReportData
 } from '../types';
 
 /* =========================================================================
@@ -99,6 +101,102 @@ export async function toggleStudentStatus(studentId: string, active: boolean): P
     handleFirestoreError(err, OperationType.UPDATE, path);
   }
 }
+
+export async function deleteStudent(studentId: string): Promise<void> {
+  const path = `users/${studentId}`;
+  try {
+    const ref = doc(db, 'users', studentId);
+    await deleteDoc(ref);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, path);
+  }
+}
+
+export async function getSingleStudentReport(studentId: string): Promise<SingleStudentReportData> {
+  const userPath = `users/${studentId}`;
+  try {
+    const userRef = doc(db, 'users', studentId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      throw new Error(`Student with ID ${studentId} not found.`);
+    }
+
+    const userData = userSnap.data();
+    const student: UserProfile = {
+      id: userSnap.id,
+      name: userData.name || '',
+      email: userData.email || '',
+      role: userData.role || 'student',
+      active: userData.active !== undefined ? userData.active : true,
+      fullName: userData.name || '',
+      isActive: userData.active !== undefined ? userData.active : true,
+      phone: userData.phone || '',
+      rollNumber: userData.rollNumber || '',
+      batch: userData.batch || '',
+      createdAt: userData.createdAt || '',
+      updatedAt: userData.updatedAt || ''
+    };
+
+    // Parallel fetch attendance, tasks, tests for this student
+    const [attendanceHistory, tasks, tests] = await Promise.all([
+      getStudentAttendance(studentId),
+      getStudentTasks(studentId),
+      getStudentTests(studentId)
+    ]);
+
+    // Calculate overall attendance summary
+    const summary = calculateAttendanceSummary(attendanceHistory);
+
+    // Group attendance into monthly metrics
+    const monthsMap: Record<string, AttendanceRecord[]> = {};
+    for (const record of attendanceHistory) {
+      if (record.date && record.date.length >= 7) {
+        const monthKey = record.date.substring(0, 7); // "YYYY-MM"
+        if (!monthsMap[monthKey]) {
+          monthsMap[monthKey] = [];
+        }
+        monthsMap[monthKey].push(record);
+      }
+    }
+
+    // Sort months descending (most recent first)
+    const sortedMonthKeys = Object.keys(monthsMap).sort((a, b) => b.localeCompare(a));
+    const monthlyMetrics: MonthlyAttendanceMetric[] = sortedMonthKeys.map((mKey) => {
+      const recs = monthsMap[mKey];
+      const mSummary = calculateAttendanceSummary(recs);
+      // Format monthName e.g. "October 2026"
+      const [yearStr, monthStr] = mKey.split('-');
+      const dateObj = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, 1);
+      const monthName = !isNaN(dateObj.getTime())
+        ? dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+        : mKey;
+
+      return {
+        month: mKey,
+        monthName,
+        total: mSummary.total,
+        present: mSummary.present,
+        late: mSummary.late,
+        absent: mSummary.absent,
+        leave: mSummary.leave,
+        percentage: mSummary.percentage
+      };
+    });
+
+    return {
+      student,
+      summary,
+      attendanceHistory,
+      monthlyMetrics,
+      tasks,
+      tests
+    };
+  } catch (err) {
+    handleFirestoreError(err, OperationType.GET, userPath);
+  }
+}
+
 
 /* =========================================================================
    ATTENDANCE SERVICES
