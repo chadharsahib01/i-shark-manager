@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   GraduationCap,
   LayoutDashboard,
@@ -11,7 +11,13 @@ import {
   Moon,
   Sun,
   Shield,
-  User
+  User,
+  Menu,
+  X,
+  PanelLeftClose,
+  Pin,
+  PinOff,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -21,16 +27,55 @@ interface NavigationProps {
   onSelectTab: (tab: string) => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
+  sidebarPinned?: boolean;
+  onTogglePinSidebar?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
   currentTab,
   onSelectTab,
   darkMode,
-  onToggleDarkMode
+  onToggleDarkMode,
+  sidebarPinned = false,
+  onTogglePinSidebar
 }) => {
   const { currentUser, userProfile, logout } = useAuth();
   const role: UserRole = (userProfile?.role as UserRole) || 'student';
+
+  const [isHovered, setIsHovered] = useState(false);
+  const [isManualOpen, setIsManualOpen] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 280);
+  };
+
+  const handleToggleManualOpen = () => {
+    setIsManualOpen((prev) => !prev);
+  };
+
+  const handleSelectTabWithClose = (tab: string) => {
+    onSelectTab(tab);
+    if (!sidebarPinned) {
+      setIsManualOpen(false);
+      setIsHovered(false);
+    }
+  };
+
+  const isVisible = Boolean(sidebarPinned || isManualOpen || isHovered);
 
   const adminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -54,37 +99,112 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* =========================================================================
-          DESKTOP LIQUID GLASS BLADE (Apple visionOS Continuous Squircle Sidebar)
+          LEFT EDGE HOVER DETECTOR & PEEK STRIP (Hover cursor to reveal sidebar)
          ========================================================================= */}
-      <aside className="hidden lg:flex fixed top-0 bottom-0 left-0 w-64 z-30 p-4 flex-col pointer-events-none">
+      {!sidebarPinned && (
+        <div
+          onMouseEnter={handleMouseEnter}
+          className="hidden lg:flex fixed top-0 bottom-0 left-0 w-3 hover:w-6 z-30 group cursor-pointer items-center transition-all duration-300 pointer-events-auto"
+          title="Move cursor here to reveal sidebar menu"
+          aria-label="Hover to reveal sidebar menu"
+        >
+          {/* Subtle glowing indicator tab in the center of the left edge */}
+          <div className="w-1.5 h-16 rounded-r-full bg-violet-500/30 group-hover:w-2 group-hover:h-24 group-hover:bg-gradient-to-b group-hover:from-violet-400 group-hover:to-rose-400 shadow-lg shadow-violet-500/50 transition-all duration-300 flex items-center justify-center">
+            <ChevronRight className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity -ml-0.5" />
+          </div>
+        </div>
+      )}
+
+      {/* Dimmed backdrop when opened on mobile or manually toggled without pin */}
+      {isVisible && !sidebarPinned && isManualOpen && (
+        <div
+          onClick={() => {
+            setIsManualOpen(false);
+            setIsHovered(false);
+          }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-35 transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* =========================================================================
+          DESKTOP & DRAWER LIQUID GLASS BLADE (Apple visionOS Sidebar with Hover & Toggle)
+         ========================================================================= */}
+      <aside
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`fixed top-0 bottom-0 left-0 w-72 z-40 p-3 sm:p-4 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isVisible
+            ? 'translate-x-0 opacity-100 pointer-events-auto shadow-2xl'
+            : '-translate-x-full opacity-0 pointer-events-none'
+        }`}
+      >
         <div className="liquid-glass-blade h-full w-full p-5 flex flex-col justify-between pointer-events-auto overflow-hidden relative shadow-2xl">
           {/* Top Specular Rim Reflection */}
           <div className="absolute top-0 left-8 right-8 h-[1.5px] bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
 
-          {/* Institute Brand Header */}
+          {/* Institute Brand Header with Close & Pin Controls */}
           <div>
-            <div
-              className="flex items-center space-x-3 cursor-pointer group mb-6"
-              onClick={() => onSelectTab('dashboard')}
-            >
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-xl shadow-violet-600/40 group-hover:scale-105 transition-transform duration-300">
-                <GraduationCap className="w-6 h-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center space-x-1.5">
-                  <h1 className="font-black text-sm tracking-tight text-white dark:text-white uppercase">
-                    I-SHARK ICT
-                  </h1>
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
+            <div className="flex items-center justify-between mb-5">
+              <div
+                className="flex items-center space-x-3 cursor-pointer group min-w-0"
+                onClick={() => handleSelectTabWithClose('dashboard')}
+              >
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-xl shadow-violet-600/40 group-hover:scale-105 transition-transform duration-300 shrink-0">
+                  <GraduationCap className="w-5 h-5" />
                 </div>
-                <p className="tag-mono text-[9px] text-slate-400 truncate">
-                  ACADEMIC PORTAL
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-1.5">
+                    <h1 className="font-black text-sm tracking-tight text-white dark:text-white uppercase truncate">
+                      I-SHARK ICT
+                    </h1>
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping shrink-0" />
+                  </div>
+                  <p className="tag-mono text-[9px] text-slate-400 truncate">
+                    ACADEMIC PORTAL
+                  </p>
+                </div>
+              </div>
+
+              {/* Sidebar Action Buttons: Pin & Close */}
+              <div className="flex items-center space-x-1 shrink-0 ml-2">
+                {onTogglePinSidebar && (
+                  <button
+                    type="button"
+                    onClick={onTogglePinSidebar}
+                    title={sidebarPinned ? "Unpin sidebar (auto-hide mode)" : "Pin sidebar (keep always visible)"}
+                    className={`p-1.5 rounded-xl border transition-all btn-tactile cursor-pointer hidden lg:flex items-center justify-center ${
+                      sidebarPinned
+                        ? 'bg-violet-600/30 text-violet-300 border-violet-500/40 shadow-xs'
+                        : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-400 hover:text-white border-white/10'
+                    }`}
+                  >
+                    {sidebarPinned ? (
+                      <Pin className="w-3.5 h-3.5 text-violet-300" />
+                    ) : (
+                      <PinOff className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                )}
+
+                {!sidebarPinned && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsManualOpen(false);
+                      setIsHovered(false);
+                    }}
+                    title="Close Sidebar"
+                    className="p-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] text-slate-400 hover:text-white border border-white/10 transition-all btn-tactile cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Role Badge Indicator */}
-            <div className="mb-6 p-2.5 rounded-2xl bg-white/[0.04] dark:bg-black/40 border border-white/10 flex items-center justify-between shadow-inner backdrop-blur-md">
+            <div className="mb-5 p-2.5 rounded-2xl bg-white/[0.04] dark:bg-black/40 border border-white/10 flex items-center justify-between shadow-inner backdrop-blur-md">
               <div className="flex items-center space-x-2">
                 <div className="p-1 rounded-lg bg-violet-500/20 text-violet-300">
                   {role === 'admin' ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
@@ -107,7 +227,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   <button
                     key={item.id}
                     id={`sidebar-nav-${item.id}`}
-                    onClick={() => onSelectTab(item.id)}
+                    onClick={() => handleSelectTabWithClose(item.id)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-300 cursor-pointer ${
                       isActive
                         ? 'bg-violet-600/90 text-white shadow-lg shadow-violet-600/40 translate-x-1 border border-violet-400/40 backdrop-blur-md'
@@ -176,33 +296,57 @@ export const Navigation: React.FC<NavigationProps> = ({
       </aside>
 
       {/* =========================================================================
-          TOP HEADER (Apple Liquid Glass Floating Capsule)
+          TOP HEADER (Apple Liquid Glass Floating Capsule with Hamburger Menu)
          ========================================================================= */}
       <header className="sticky top-0 z-20 w-full px-4 sm:px-6 lg:px-8 py-3 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-2.5 sm:px-5 rounded-2xl liquid-glass-capsule">
-          {/* Mobile Logo & Title */}
-          <div className="flex items-center space-x-3 lg:hidden">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-violet-600/30">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="font-black text-sm text-white tracking-tight uppercase">
-                I-SHARK ICT
-              </h1>
-              <p className="tag-mono text-[9px] text-violet-400 font-bold">
-                {currentTabObj.label}
-              </p>
-            </div>
-          </div>
+          {/* Left section: Hamburger Menu Button + Logo/Breadcrumb */}
+          <div className="flex items-center space-x-3">
+            {/* Hamburger / Sidebar Toggle Button (Hover or Click) */}
+            <button
+              type="button"
+              id="btn-sidebar-hamburger"
+              onClick={handleToggleManualOpen}
+              onMouseEnter={handleMouseEnter}
+              aria-label="Toggle Navigation Sidebar"
+              title={isVisible ? "Hide Navigation Sidebar" : "Open Navigation Sidebar (or hover left screen edge)"}
+              className={`p-2 rounded-xl border transition-all btn-tactile cursor-pointer flex items-center justify-center shrink-0 ${
+                isVisible
+                  ? 'bg-violet-600/30 text-violet-200 border-violet-500/40 shadow-md shadow-violet-950/50'
+                  : 'bg-white/[0.08] hover:bg-white/[0.15] text-slate-200 border-white/10'
+              }`}
+            >
+              {isVisible && !sidebarPinned ? (
+                <PanelLeftClose className="w-4 h-4 text-violet-300" />
+              ) : (
+                <Menu className="w-4 h-4 text-violet-300" />
+              )}
+            </button>
 
-          {/* Desktop Breadcrumb/Page Title */}
-          <div className="hidden lg:flex items-center space-x-3">
-            <span className="text-lg font-black text-white tracking-tight">
-              {currentTabObj.label}
-            </span>
-            <span className="text-xs px-2.5 py-1 rounded-xl font-mono text-slate-400 bg-white/[0.05] border border-white/10 backdrop-blur-md">
-              {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-            </span>
+            {/* Mobile Logo & Title */}
+            <div className="flex items-center space-x-2.5 lg:hidden">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-violet-600/30 shrink-0">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-black text-sm text-white tracking-tight uppercase truncate">
+                  I-SHARK ICT
+                </h1>
+                <p className="tag-mono text-[9px] text-violet-400 font-bold truncate">
+                  {currentTabObj.label}
+                </p>
+              </div>
+            </div>
+
+            {/* Desktop Breadcrumb/Page Title */}
+            <div className="hidden lg:flex items-center space-x-3">
+              <span className="text-lg font-black text-white tracking-tight">
+                {currentTabObj.label}
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-xl font-mono text-slate-400 bg-white/[0.05] border border-white/10 backdrop-blur-md">
+                {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
           </div>
 
           {/* Top Actions */}

@@ -91,6 +91,18 @@ function AppContent() {
     );
   });
 
+  const [sidebarPinned, setSidebarPinned] = useState<boolean>(() => {
+    return localStorage.getItem('sidebar_pinned') === 'true';
+  });
+
+  const togglePinSidebar = () => {
+    setSidebarPinned((prev) => {
+      const next = !prev;
+      localStorage.setItem('sidebar_pinned', String(next));
+      return next;
+    });
+  };
+
   // Sync dark mode class with DOM
   useEffect(() => {
     if (darkMode) {
@@ -229,10 +241,12 @@ function AppContent() {
           onSelectTab={setCurrentTab}
           darkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
+          sidebarPinned={sidebarPinned}
+          onTogglePinSidebar={togglePinSidebar}
         />
 
-        {/* Main View Area: padded for desktop sidebar (lg:pl-64) and mobile floating bar (pb-28) */}
-        <div className="lg:pl-64 flex-1 flex flex-col min-h-screen">
+        {/* Main View Area: padded for desktop sidebar when pinned (lg:pl-72), or full width (lg:pl-0) when auto-hidden */}
+        <div className={`flex-1 flex flex-col min-h-screen transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${sidebarPinned ? 'lg:pl-72' : 'lg:pl-0'}`}>
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 lg:pb-12">
             {/* Admin Views */}
             {role === 'admin' && (
