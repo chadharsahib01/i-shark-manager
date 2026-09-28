@@ -139,10 +139,10 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl shadow-violet-950/50 overflow-hidden text-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-2xl animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl liquid-glass-panel rounded-3xl shadow-2xl shadow-black/80 overflow-hidden text-slate-200">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-950/80">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.03]">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-xl bg-violet-600/20 text-violet-400 border border-violet-500/30">
               <FileText className="w-5 h-5" />

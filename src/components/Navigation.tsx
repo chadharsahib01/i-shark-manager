@@ -11,8 +11,7 @@ import {
   Moon,
   Sun,
   Shield,
-  User,
-  Sparkles
+  User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -55,12 +54,12 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* =========================================================================
-          DESKTOP SIDEBAR
+          DESKTOP LIQUID GLASS BLADE (Apple visionOS Continuous Squircle Sidebar)
          ========================================================================= */}
       <aside className="hidden lg:flex fixed top-0 bottom-0 left-0 w-64 z-30 p-4 flex-col pointer-events-none">
-        <div className="ticket-pass h-full w-full p-5 flex flex-col justify-between pointer-events-auto overflow-hidden relative">
-          {/* Subtle top laser border accent */}
-          <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-violet-500 to-transparent" />
+        <div className="liquid-glass-blade h-full w-full p-5 flex flex-col justify-between pointer-events-auto overflow-hidden relative shadow-2xl">
+          {/* Top Specular Rim Reflection */}
+          <div className="absolute top-0 left-8 right-8 h-[1.5px] bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
 
           {/* Institute Brand Header */}
           <div>
@@ -68,7 +67,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               className="flex items-center space-x-3 cursor-pointer group mb-6"
               onClick={() => onSelectTab('dashboard')}
             >
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 group-hover:scale-105 transition-transform duration-200">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-xl shadow-violet-600/40 group-hover:scale-105 transition-transform duration-300">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div className="min-w-0">
@@ -79,27 +78,27 @@ export const Navigation: React.FC<NavigationProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
                 </div>
                 <p className="tag-mono text-[9px] text-slate-400 truncate">
-                  ACADEMIC MANAGEMENT
+                  ACADEMIC PORTAL
                 </p>
               </div>
             </div>
 
-            {/* Role Badge Header */}
-            <div className="mb-6 p-2.5 rounded-xl bg-slate-900/90 dark:bg-black/50 border border-violet-500/20 flex items-center justify-between shadow-inner">
+            {/* Role Badge Indicator */}
+            <div className="mb-6 p-2.5 rounded-2xl bg-white/[0.04] dark:bg-black/40 border border-white/10 flex items-center justify-between shadow-inner backdrop-blur-md">
               <div className="flex items-center space-x-2">
-                <div className="p-1 rounded-md bg-violet-500/10 text-violet-400">
+                <div className="p-1 rounded-lg bg-violet-500/20 text-violet-300">
                   {role === 'admin' ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                 </div>
                 <span className="text-xs font-bold text-slate-200 tracking-tight">
                   {role === 'admin' ? 'Administration' : 'Student Portal'}
                 </span>
               </div>
-              <span className="tag-mono text-[9px] px-2 py-0.5 rounded-md font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+              <span className="tag-mono text-[9px] px-2 py-0.5 rounded-full font-bold bg-violet-500/20 text-violet-300 border border-violet-400/30">
                 {role === 'admin' ? 'ADMIN' : 'STUDENT'}
               </span>
             </div>
 
-            {/* Navigation List */}
+            {/* Navigation List with Liquid Droplet Active Highlight */}
             <nav className="space-y-1.5" aria-label="Desktop Navigation">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -109,14 +108,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                     key={item.id}
                     id={`sidebar-nav-${item.id}`}
                     onClick={() => onSelectTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-300 cursor-pointer ${
                       isActive
-                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30 translate-x-1'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                        ? 'bg-violet-600/90 text-white shadow-lg shadow-violet-600/40 translate-x-1 border border-violet-400/40 backdrop-blur-md'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.06]'
                     }`}
                   >
                     <div className="flex items-center space-x-3 min-w-0">
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'text-white scale-110' : 'text-slate-400'}`} />
                       <span className="truncate">{item.label}</span>
                     </div>
                   </button>
@@ -125,8 +124,8 @@ export const Navigation: React.FC<NavigationProps> = ({
             </nav>
           </div>
 
-          {/* User Profile & Ticket Perforation Bottom Area */}
-          <div className="pt-3 border-t border-dashed border-slate-700/80 space-y-3">
+          {/* User Profile & Refractive Bottom Area */}
+          <div className="pt-3 border-t border-white/10 space-y-3">
             <div className="flex items-center justify-between">
               {/* Dark mode toggle */}
               <button
@@ -134,14 +133,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                 onClick={onToggleDarkMode}
                 id="btn-sidebar-theme-toggle"
                 aria-label="Toggle dark mode"
-                className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all btn-tactile"
+                className="p-2 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 border border-white/10 transition-all btn-tactile cursor-pointer"
                 title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-violet-400" />}
               </button>
 
               {/* Status Pill */}
-              <div className="tag-mono text-[9px] text-emerald-400 px-2 py-1 rounded bg-slate-900 border border-slate-800">
+              <div className="tag-mono text-[9px] text-emerald-400 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-bold">
                 ACTIVE
               </div>
 
@@ -151,7 +150,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 onClick={logout}
                 id="btn-sidebar-logout"
                 aria-label="Sign Out"
-                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all btn-tactile"
+                className="p-2 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition-all btn-tactile cursor-pointer"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
@@ -159,8 +158,8 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
 
             {/* User Info Capsule */}
-            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
+            <div className="p-2.5 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center space-x-3 shadow-inner">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-rose-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
                 {(userProfile?.fullName || currentUser?.email || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -177,10 +176,10 @@ export const Navigation: React.FC<NavigationProps> = ({
       </aside>
 
       {/* =========================================================================
-          TOP HEADER
+          TOP HEADER (Apple Liquid Glass Floating Capsule)
          ========================================================================= */}
       <header className="sticky top-0 z-20 w-full px-4 sm:px-6 lg:px-8 py-3 transition-colors">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between p-2.5 sm:px-5 rounded-2xl liquid-glass-capsule">
           {/* Mobile Logo & Title */}
           <div className="flex items-center space-x-3 lg:hidden">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-violet-600/30">
@@ -198,10 +197,10 @@ export const Navigation: React.FC<NavigationProps> = ({
 
           {/* Desktop Breadcrumb/Page Title */}
           <div className="hidden lg:flex items-center space-x-3">
-            <span className="text-xl font-black text-white tracking-tight">
+            <span className="text-lg font-black text-white tracking-tight">
               {currentTabObj.label}
             </span>
-            <span className="text-xs px-2.5 py-1 rounded-lg font-mono text-slate-400 bg-slate-900/60 border border-slate-800">
+            <span className="text-xs px-2.5 py-1 rounded-xl font-mono text-slate-400 bg-white/[0.05] border border-white/10 backdrop-blur-md">
               {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
@@ -209,10 +208,10 @@ export const Navigation: React.FC<NavigationProps> = ({
           {/* Top Actions */}
           <div className="flex items-center space-x-2">
             <span
-              className={`hidden sm:inline-flex items-center px-3 py-1 rounded-lg tag-mono font-bold ${
+              className={`hidden sm:inline-flex items-center px-3 py-1 rounded-xl tag-mono font-bold ${
                 role === 'admin'
-                  ? 'bg-violet-500/10 text-violet-300 border border-violet-500/20'
-                  : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                  ? 'bg-violet-500/15 text-violet-300 border border-violet-500/30'
+                  : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
               }`}
             >
               {role === 'admin' ? <Shield className="w-3.5 h-3.5 mr-1 text-violet-400" /> : <User className="w-3.5 h-3.5 mr-1 text-emerald-400" />}
@@ -224,7 +223,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               type="button"
               onClick={onToggleDarkMode}
               aria-label="Toggle dark mode"
-              className="lg:hidden p-2 rounded-xl bg-slate-800/80 text-slate-200 border border-slate-700"
+              className="lg:hidden p-2 rounded-xl bg-white/[0.08] text-slate-200 border border-white/10"
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-violet-400" />}
             </button>
@@ -235,7 +234,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               onClick={logout}
               aria-label="Sign Out"
               title="Sign Out"
-              className="lg:hidden p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"
+              className="lg:hidden p-2 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/30"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -244,13 +243,13 @@ export const Navigation: React.FC<NavigationProps> = ({
       </header>
 
       {/* =========================================================================
-          FLOATING BOTTOM TICKET BAR (Mobile & Tablet: < lg)
+          FLOATING BOTTOM VISIONOS DOCK (Mobile & Tablet: < lg)
          ========================================================================= */}
       <nav
         className="lg:hidden fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-8 z-40 max-w-md mx-auto"
         aria-label="Mobile Bottom Navigation"
       >
-        <div className="ticket-pass p-1.5 rounded-2xl flex items-center justify-around shadow-2xl bg-slate-900/95 border-violet-500/30 backdrop-blur-xl">
+        <div className="liquid-glass-capsule p-1.5 rounded-full flex items-center justify-around shadow-2xl backdrop-blur-2xl">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -259,16 +258,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                 key={item.id}
                 id={`mobile-tab-${item.id}`}
                 onClick={() => onSelectTab(item.id)}
-                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-200 active:scale-95 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-full transition-all duration-300 active:scale-95 cursor-pointer ${
                   isActive
                     ? 'text-white font-bold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {isActive && (
-                  <span className="absolute inset-0 rounded-xl bg-violet-600 shadow-md shadow-violet-600/40 -z-10" />
+                  <span className="absolute inset-0 rounded-full bg-violet-600/90 shadow-lg shadow-violet-600/50 border border-violet-400/40 -z-10" />
                 )}
-                <Icon className={`w-4 h-4 transition-transform duration-200 ${isActive ? 'scale-110 text-white' : ''}`} />
+                <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'scale-110 text-white' : ''}`} />
                 <span className="text-[9px] mt-1 font-mono tracking-tight truncate max-w-[58px]">
                   {item.label}
                 </span>

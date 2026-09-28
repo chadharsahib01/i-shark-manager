@@ -232,11 +232,11 @@ export const StudentReportModal: React.FC<StudentReportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl shadow-violet-950/40 my-8 overflow-hidden text-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-2xl overflow-y-auto">
+      <div className="relative w-full max-w-4xl liquid-glass-panel rounded-3xl shadow-2xl shadow-black/80 my-8 overflow-hidden text-slate-200">
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.03]">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-xl bg-violet-600/20 text-violet-400 border border-violet-500/30">
               <FileText className="w-5 h-5" />

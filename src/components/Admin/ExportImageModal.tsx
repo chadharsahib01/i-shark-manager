@@ -196,10 +196,10 @@ export const ExportImageModal: React.FC<ExportImageModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl shadow-violet-950/50 overflow-hidden text-slate-200 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-2xl animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl liquid-glass-panel rounded-3xl shadow-2xl shadow-black/80 overflow-hidden text-slate-200 flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-950/90 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.03] shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
               {format === 'png' ? (

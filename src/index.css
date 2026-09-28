@@ -4,27 +4,42 @@
 
 @layer base {
   :root {
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+    /* Dynamic Specular Highlight & Optical Lighting Coordinates (Updated via JS) */
+    --highlight-x: 50%;
+    --highlight-y: 25%;
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+    --mouse-px: 50vw;
+    --mouse-py: 30vh;
+
+    /* Continuous Squircle Geometry Constants */
+    --squircle-radius: 1.75rem;
+    --squircle-sm: 1rem;
+    --squircle-md: 1.35rem;
+    --squircle-lg: 1.75rem;
+    --squircle-xl: 2.25rem;
   }
 
   body {
     font-family: var(--font-sans);
-    @apply bg-slate-900 text-slate-100 transition-colors duration-200 antialiased selection:bg-violet-500/30 selection:text-violet-200;
+    @apply bg-slate-950 text-slate-100 transition-colors duration-300 antialiased selection:bg-violet-500/40 selection:text-white;
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* When light mode is toggled, provide clean high contrast */
+  /* Light Mode Optical Refraction Adjustments */
   :root:not(.dark) body {
-    @apply bg-slate-100 text-slate-900 selection:bg-violet-500/20 selection:text-violet-900;
+    @apply bg-slate-100 text-slate-900 selection:bg-violet-500/25 selection:text-violet-950;
   }
 }
 
 /* =========================================================================
-   CYBER BLUEPRINT GRID & AMBIENT MESH BACKGROUND
+   APPLE LIQUID GLASS BACKDROP & CHROMATIC AMBIENT LIGHT
    ========================================================================= */
-.cyber-canvas-background {
+.liquid-glass-backdrop {
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -32,168 +47,479 @@
   z-index: 0;
 }
 
-/* Moving Blueprint Cyber Grid */
-.cyber-grid-overlay {
+/* Deep Spatial Caustics and Dynamic Color Bloom */
+.liquid-ambient-canvas {
   position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(124, 58, 237, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 58, 237, 0.07) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(circle at 50% 40%, black 40%, transparent 85%);
-  -webkit-mask-image: radial-gradient(circle at 50% 40%, black 40%, transparent 85%);
-  pointer-events: none;
-}
-
-:root:not(.dark) .cyber-grid-overlay {
-  background-image: 
-    linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
-}
-
-/* Floating ambient glow blobs */
-.cyber-glow-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(100px);
-  opacity: 0.35;
+  inset: -15%;
+  width: 130%;
+  height: 130%;
+  background: 
+    radial-gradient(ellipse 65% 55% at 50% -10%, rgba(124, 58, 237, 0.38) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 85% 30%, rgba(99, 102, 241, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 15% 75%, rgba(244, 63, 94, 0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 65% 85%, rgba(14, 165, 233, 0.25) 0%, transparent 60%);
+  filter: blur(70px);
   will-change: transform;
-  animation: cyber-blob-float 22s ease-in-out infinite alternate;
+  animation: liquid-caustic-drift 28s ease-in-out infinite alternate;
 }
 
-:root:not(.dark) .cyber-glow-blob {
-  opacity: 0.25;
+:root:not(.dark) .liquid-ambient-canvas {
+  background: 
+    radial-gradient(ellipse 65% 55% at 50% -10%, rgba(124, 58, 237, 0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 85% 30%, rgba(99, 102, 241, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 15% 75%, rgba(244, 63, 94, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 65% 85%, rgba(14, 165, 233, 0.14) 0%, transparent 60%);
   filter: blur(85px);
 }
 
-.blob-violet {
-  width: 550px;
-  height: 550px;
-  top: -100px;
+/* Organic Chromatic Blobs for Adaptive Color Sampling */
+.liquid-chromatic-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(85px);
+  opacity: 0.45;
+  will-change: transform;
+}
+
+.orb-violet {
+  width: 650px;
+  height: 650px;
+  top: -120px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.8) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 75%);
+  animation: liquid-orb-float-1 22s ease-in-out infinite alternate;
+}
+
+.orb-cyan {
+  width: 580px;
+  height: 580px;
+  top: 35%;
+  left: -150px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.65) 0%, rgba(59, 130, 246, 0.25) 50%, transparent 75%);
+  animation: liquid-orb-float-2 26s ease-in-out infinite alternate;
+}
+
+.orb-rose {
+  width: 520px;
+  height: 520px;
+  bottom: 0%;
+  right: 15%;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.6) 0%, rgba(217, 70, 239, 0.2) 50%, transparent 75%);
+  animation: liquid-orb-float-3 30s ease-in-out infinite alternate;
+}
+
+.orb-emerald {
+  width: 480px;
+  height: 480px;
+  top: 55%;
   right: -80px;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.65) 0%, rgba(99, 102, 241, 0.15) 70%, transparent 100%);
-  animation-duration: 25s;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, rgba(6, 182, 212, 0.15) 50%, transparent 75%);
+  animation: liquid-orb-float-2 34s ease-in-out infinite alternate-reverse;
 }
 
-.blob-rose {
-  width: 500px;
-  height: 500px;
-  bottom: 5%;
-  left: -120px;
-  background: radial-gradient(circle, rgba(244, 63, 94, 0.5) 0%, rgba(168, 85, 247, 0.15) 70%, transparent 100%);
-  animation-duration: 28s;
-  animation-delay: -6s;
+@keyframes liquid-caustic-drift {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.08) translate(30px, -20px) rotate(2deg); }
+  100% { transform: scale(0.96) translate(-25px, 25px) rotate(-2deg); }
 }
 
-.blob-lime {
-  width: 420px;
-  height: 420px;
-  top: 40%;
-  left: 35%;
-  background: radial-gradient(circle, rgba(226, 249, 82, 0.25) 0%, rgba(132, 204, 22, 0.05) 70%, transparent 100%);
-  animation-duration: 32s;
-  animation-delay: -12s;
+@keyframes liquid-orb-float-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, 60px) scale(1.12); }
+  100% { transform: translate(30px, -40px) scale(0.94); }
 }
 
-@keyframes cyber-blob-float {
-  0% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(25px, -35px) scale(1.06); }
-  100% { transform: translate(-20px, 25px) scale(0.96); }
+@keyframes liquid-orb-float-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, -35px) scale(1.08); }
+  100% { transform: translate(-30px, 45px) scale(0.96); }
+}
+
+@keyframes liquid-orb-float-3 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-35px, -50px) scale(1.15); }
+  100% { transform: translate(40px, 30px) scale(0.92); }
 }
 
 /* =========================================================================
-   TICKET / ADMIT PASS STYLING (Inspiration 1)
+   APPLE LIQUID GLASS (iOS 26 / visionOS) CORE ARCHITECTURE
    ========================================================================= */
+
+/* 1. Base Glass Plane: Continuous Squircle + Asymmetric 3D Curvature */
+.liquid-glass-card,
 .ticket-pass {
   position: relative;
-  border-radius: 1.5rem;
-  background: #181820;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--squircle-radius, 1.75rem);
+  /* Optical Multilayer Depth */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    rgba(15, 15, 22, 0.65) 100%
+  );
+  background-color: rgba(18, 18, 26, 0.72);
+  
+  /* Layer 1: Real Optical Refraction & Saturation Bloom */
+  backdrop-filter: blur(28px) saturate(210%) brightness(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(1.04);
+  
+  /* Layer 2: 3D Lens Curvature via Asymmetric Inset Shadows */
   box-shadow: 
-    0 20px 40px -15px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    /* Top-left specular rim reflection */
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
+    /* Bottom-right shadow trough simulating 3D convexity */
+    inset 0 -2.5px 5px 0 rgba(0, 0, 0, 0.55),
+    inset 1.5px 0 3px 0 rgba(255, 255, 255, 0.18),
+    inset -1.5px 0 3px 0 rgba(0, 0, 0, 0.35),
+    /* Deep ambient optical drop shadow */
+    0 24px 50px -16px rgba(0, 0, 0, 0.75),
+    0 4px 12px -2px rgba(0, 0, 0, 0.4);
+
+  /* Layer 3: Continuous Squircle Rim Light */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top-color: rgba(255, 255, 255, 0.38);
+  border-left-color: rgba(255, 255, 255, 0.26);
+  border-right-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+  will-change: transform, box-shadow;
+  /* Apple Fluid Spring Easing */
+  transition: 
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.4s ease,
+    border-color 0.3s ease;
 }
 
+/* Light Mode Optical Compensation */
+:root:not(.dark) .liquid-glass-card,
 :root:not(.dark) .ticket-pass {
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(241, 245, 249, 0.78) 100%
+  );
+  background-color: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(32px) saturate(190%) brightness(1.02);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) brightness(1.02);
+  
   box-shadow: 
-    0 20px 35px -12px rgba(15, 23, 42, 0.08),
-    0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -2px 4px 0 rgba(15, 23, 42, 0.08),
+    inset 1.5px 0 2px 0 rgba(255, 255, 255, 0.7),
+    inset -1.5px 0 2px 0 rgba(15, 23, 42, 0.05),
+    0 20px 45px -12px rgba(15, 23, 42, 0.12),
+    0 2px 8px -1px rgba(15, 23, 42, 0.05);
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-top-color: rgba(255, 255, 255, 0.98);
+  border-left-color: rgba(255, 255, 255, 0.9);
+  border-right-color: rgba(203, 213, 225, 0.6);
+  border-bottom-color: rgba(203, 213, 225, 0.5);
 }
 
+/* 2. DYNAMIC SPECULAR HIGHLIGHT (The Living "Shine" that tracks mouse/tilt) */
+.liquid-glass-card::after,
+.ticket-pass::after,
+.liquid-glass-blade::after,
+.liquid-glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  /* Specular Highlight Arc shifting with mouse/device tilt coordinates */
+  background: radial-gradient(
+    circle 540px at var(--highlight-x, 48%) var(--highlight-y, 22%),
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(168, 85, 247, 0.05) 45%,
+    transparent 70%
+  );
+  mix-blend-mode: overlay;
+  transition: opacity 0.3s ease;
+  opacity: 0.9;
+}
+
+:root:not(.dark) .liquid-glass-card::after,
+:root:not(.dark) .ticket-pass::after,
+:root:not(.dark) .liquid-glass-blade::after,
+:root:not(.dark) .liquid-glass-panel::after {
+  background: radial-gradient(
+    circle 540px at var(--highlight-x, 48%) var(--highlight-y, 22%),
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.35) 30%,
+    transparent 65%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.8;
+}
+
+/* 3. REAL REFRACTION EDGE RING (Visible bending near boundaries) */
+.liquid-glass-card::before,
+.ticket-pass::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  /* SVG Distortion Filter applied strictly to the refractive edge boundary */
+  filter: url(#liquid-refraction);
+  opacity: 0.75;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 3px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(168, 85, 247, 0.35) 30%,
+    rgba(56, 189, 248, 0.25) 70%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+}
+
+/* Hover Morph & Elevate with Fluid Spring Curve */
+.liquid-glass-card:hover,
 .ticket-pass:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.006);
   box-shadow: 
-    0 24px 48px -15px rgba(0, 0, 0, 0.8),
-    0 0 25px -5px rgba(124, 58, 237, 0.25);
+    inset 0 2px 3px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -3px 6px 0 rgba(0, 0, 0, 0.6),
+    inset 2px 0 4px 0 rgba(255, 255, 255, 0.25),
+    inset -2px 0 4px 0 rgba(0, 0, 0, 0.4),
+    0 32px 64px -16px rgba(0, 0, 0, 0.85),
+    0 0 35px -8px rgba(139, 92, 246, 0.35);
+  border-top-color: rgba(255, 255, 255, 0.55);
 }
 
+:root:not(.dark) .liquid-glass-card:hover,
 :root:not(.dark) .ticket-pass:hover {
+  transform: translateY(-3px) scale(1.006);
   box-shadow: 
-    0 24px 45px -12px rgba(15, 23, 42, 0.12),
-    0 0 20px -3px rgba(99, 102, 241, 0.15);
+    inset 0 2px 3px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -2.5px 5px 0 rgba(15, 23, 42, 0.1),
+    inset 2px 0 3px 0 rgba(255, 255, 255, 0.8),
+    inset -2px 0 3px 0 rgba(15, 23, 42, 0.06),
+    0 28px 55px -12px rgba(15, 23, 42, 0.18),
+    0 0 28px -5px rgba(99, 102, 241, 0.25);
+  border-top-color: #ffffff;
 }
 
-/* Ticket Perforation Notches & Dashed Line */
+/* Tactile Liquid Compression on Press */
+.liquid-glass-card:active,
+.ticket-pass:active {
+  transform: scale(0.982);
+  transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* =========================================================================
+   LIQUID GLASS BLADE (VISIONOS SIDEBAR)
+   ========================================================================= */
+.liquid-glass-blade {
+  border-radius: 2rem;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 35%,
+    rgba(15, 17, 26, 0.78) 100%
+  );
+  background-color: rgba(15, 17, 26, 0.82);
+  backdrop-filter: blur(36px) saturate(220%) brightness(1.05);
+  -webkit-backdrop-filter: blur(36px) saturate(220%) brightness(1.05);
+  
+  box-shadow: 
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -2.5px 5px 0 rgba(0, 0, 0, 0.55),
+    inset 1.5px 0 3px 0 rgba(255, 255, 255, 0.2),
+    inset -1.5px 0 3px 0 rgba(0, 0, 0, 0.35),
+    0 30px 65px -15px rgba(0, 0, 0, 0.85);
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.4);
+  border-left-color: rgba(255, 255, 255, 0.28);
+}
+
+:root:not(.dark) .liquid-glass-blade {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.72) 45%,
+    rgba(241, 245, 249, 0.82) 100%
+  );
+  background-color: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(36px) saturate(190%) brightness(1.02);
+  -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(1.02);
+  
+  box-shadow: 
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -2px 4px 0 rgba(15, 23, 42, 0.08),
+    0 24px 50px -15px rgba(15, 23, 42, 0.14);
+
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-top-color: #ffffff;
+}
+
+/* =========================================================================
+   LIQUID GLASS FLOATING BAR & CAPSULE (MOBILE & TOP HEADER)
+   ========================================================================= */
+.liquid-glass-capsule {
+  border-radius: 9999px;
+  background: rgba(18, 18, 26, 0.78);
+  backdrop-filter: blur(30px) saturate(220%);
+  -webkit-backdrop-filter: blur(30px) saturate(220%);
+  box-shadow: 
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -2px 4px 0 rgba(0, 0, 0, 0.5),
+    0 20px 45px -12px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top-color: rgba(255, 255, 255, 0.45);
+}
+
+:root:not(.dark) .liquid-glass-capsule {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    0 16px 36px -10px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+/* =========================================================================
+   LIQUID GLASS BUTTONS & TACTILE CONTROLS
+   ========================================================================= */
+.liquid-glass-btn,
+.glow-orb-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  font-weight: 700;
+  /* Liquid Spring Easing */
+  transition: 
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+  z-index: 1;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1.5px 3px 0 rgba(0, 0, 0, 0.4),
+    0 10px 25px -6px rgba(124, 58, 237, 0.55);
+}
+
+.liquid-glass-btn::after,
+.glow-orb-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 180px at var(--highlight-x, 45%) var(--highlight-y, 25%),
+    rgba(255, 255, 255, 0.35) 0%,
+    transparent 70%
+  );
+  mix-blend-mode: overlay;
+  transition: opacity 0.2s ease;
+}
+
+.liquid-glass-btn:hover,
+.glow-orb-btn:hover {
+  transform: translateY(-1.5px) scale(1.02);
+  box-shadow: 
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -2px 4px 0 rgba(0, 0, 0, 0.45),
+    0 16px 32px -6px rgba(124, 58, 237, 0.7);
+}
+
+/* Micro-interaction: Liquid Compression + Ripple Wave on Active */
+.liquid-glass-btn:active,
+.glow-orb-btn:active,
+.btn-tactile:active {
+  transform: scale(0.965);
+  transition: transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* =========================================================================
+   OPTICAL GLASS DIVIDER (Replaces Paper Perforation)
+   ========================================================================= */
 .ticket-perforation-divider {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 24px;
-  margin: 0 -1px;
+  height: 20px;
+  margin: 0;
+  background: transparent;
 }
 
 .ticket-notch-left,
 .ticket-notch-right {
-  width: 14px;
-  height: 24px;
-  background: #0f172a;
+  width: 12px;
+  height: 20px;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.7);
   transition: background-color 0.2s ease;
 }
 
 :root:not(.dark) .ticket-notch-left,
 :root:not(.dark) .ticket-notch-right {
-  background: #f1f5f9;
+  background: rgba(241, 245, 249, 0.95);
+  box-shadow: inset 0 0 3px rgba(15, 23, 42, 0.15);
 }
 
 .ticket-notch-left {
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 :root:not(.dark) .ticket-notch-left {
-  border-right: 1px solid rgba(226, 232, 240, 0.9);
+  border-right: 1px solid rgba(203, 213, 225, 0.8);
 }
 
 .ticket-notch-right {
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 :root:not(.dark) .ticket-notch-right {
-  border-left: 1px solid rgba(226, 232, 240, 0.9);
+  border-left: 1px solid rgba(203, 213, 225, 0.8);
 }
 
 .ticket-dashed-line {
   flex: 1;
-  height: 0;
-  border-top: 2px dashed rgba(255, 255, 255, 0.15);
-  margin: 0 10px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 20%,
+    rgba(168, 85, 247, 0.45) 50%,
+    rgba(255, 255, 255, 0.25) 80%,
+    transparent 100%
+  );
+  margin: 0 8px;
 }
 
 :root:not(.dark) .ticket-dashed-line {
-  border-top: 2px dashed rgba(148, 163, 184, 0.4);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(148, 163, 184, 0.4) 20%,
+    rgba(99, 102, 241, 0.5) 50%,
+    rgba(148, 163, 184, 0.4) 80%,
+    transparent 100%
+  );
 }
 
-/* Monospace Barcode visual element */
+/* Barcode Graphic */
 .ticket-barcode-graphic {
-  height: 28px;
+  height: 24px;
   background: repeating-linear-gradient(
     90deg,
     currentColor 0,
@@ -213,183 +539,11 @@
     transparent 16px,
     transparent 19px
   );
-  opacity: 0.75;
-}
-
-/* Subtle Holographic Shimmer */
-.holo-sheen {
-  position: relative;
-  overflow: hidden;
-}
-
-.holo-sheen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    120deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.06) 45%,
-    rgba(124, 58, 237, 0.15) 50%,
-    rgba(255, 255, 255, 0.08) 55%,
-    transparent 80%
-  );
-  background-size: 250% 250%;
-  background-position: 100% 100%;
-  transition: background-position 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-  mix-blend-mode: overlay;
-}
-
-.holo-sheen:hover::after {
-  background-position: 0% 0%;
+  opacity: 0.65;
 }
 
 /* =========================================================================
-   MEETING-CARD & CALENDAR DAY STRIP (Inspiration 2)
-   ========================================================================= */
-.meeting-calendar-strip {
-  border-radius: 1.25rem;
-  padding: 10px 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-}
-
-.day-pill-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  cursor: pointer;
-  user-select: none;
-}
-
-.day-pill-num {
-  font-size: 0.95rem;
-  font-weight: 700;
-  height: 28px;
-  width: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.day-pill-name {
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  height: 20px;
-  width: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-/* Active Day Indicator (energetic lime / electric violet highlight) */
-.day-pill-active .day-pill-num,
-.day-pill-active .day-pill-name {
-  background-color: #e2f952;
-  color: #0f172a;
-}
-
-:root:not(.dark) .day-pill-active .day-pill-num,
-:root:not(.dark) .day-pill-active .day-pill-name {
-  background-color: #7c3aed;
-  color: #ffffff;
-}
-
-/* Connector Timeline with Status Dots */
-.calendar-timeline-container {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  position: relative;
-  padding: 6px 16px 0 16px;
-  box-sizing: border-box;
-}
-
-.calendar-timeline-line {
-  position: absolute;
-  top: 50%;
-  left: 24px;
-  right: 24px;
-  height: 1px;
-  border-top: 1.5px dashed rgba(255, 255, 255, 0.15);
-  z-index: 1;
-}
-
-:root:not(.dark) .calendar-timeline-line {
-  border-top: 1.5px dashed rgba(148, 163, 184, 0.4);
-}
-
-.calendar-timeline-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  position: relative;
-  z-index: 2;
-  transition: transform 0.2s ease;
-}
-
-/* =========================================================================
-   GLOW-ORB AMBIENT BUTTONS (Inspiration 3)
-   ========================================================================= */
-.glow-orb-btn {
-  position: relative;
-  overflow: hidden;
-  border-radius: 0.875rem;
-  font-weight: 700;
-  transition: all 0.3s ease;
-  z-index: 1;
-}
-
-.glow-orb-btn::before {
-  content: "";
-  position: absolute;
-  width: 3.5rem;
-  height: 3.5rem;
-  top: -0.5rem;
-  right: 0.5rem;
-  border-radius: 9999px;
-  background: rgba(124, 58, 237, 0.85);
-  filter: blur(14px);
-  z-index: -1;
-  transition: all 0.4s ease;
-}
-
-.glow-orb-btn::after {
-  content: "";
-  position: absolute;
-  width: 4rem;
-  height: 4rem;
-  bottom: -1rem;
-  right: 3rem;
-  border-radius: 9999px;
-  background: rgba(244, 63, 94, 0.7);
-  filter: blur(16px);
-  z-index: -1;
-  transition: all 0.4s ease;
-}
-
-.glow-orb-btn:hover::before {
-  transform: scale(1.6) translate(-10px, 10px);
-}
-
-.glow-orb-btn:hover::after {
-  transform: scale(1.5) translate(15px, -10px);
-}
-
-/* =========================================================================
-   DEEP MATTE INSET FORMS & INPUTS (Inspiration 4)
+   DEEP REFRACTIVE INSET FORMS & INPUTS
    ========================================================================= */
 .inset-field {
   display: flex;
@@ -397,34 +551,36 @@
   gap: 0.75rem;
   border-radius: 1rem;
   padding: 0.75rem 1rem;
-  background: #141419;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(12, 12, 18, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
-    inset 0 2px 6px rgba(0, 0, 0, 0.5),
-    inset 0 1px 2px rgba(0, 0, 0, 0.4);
-  transition: all 0.25s ease;
+    inset 0 2px 5px rgba(0, 0, 0, 0.6),
+    inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 :root:not(.dark) .inset-field {
-  background: #f8fafc;
-  border: 1px solid rgba(203, 213, 225, 0.8);
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(203, 213, 225, 0.9);
   box-shadow: 
-    inset 0 2px 4px rgba(15, 23, 42, 0.05),
+    inset 0 2px 4px rgba(15, 23, 42, 0.06),
     inset 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .inset-field:focus-within {
-  border-color: #7c3aed;
+  border-color: rgba(168, 85, 247, 0.7);
   box-shadow: 
-    inset 0 2px 6px rgba(0, 0, 0, 0.5),
-    0 0 0 2px rgba(124, 58, 237, 0.25);
+    inset 0 2px 5px rgba(0, 0, 0, 0.6),
+    0 0 0 3px rgba(168, 85, 247, 0.25);
 }
 
 :root:not(.dark) .inset-field:focus-within {
   border-color: #6366f1;
   box-shadow: 
-    inset 0 2px 4px rgba(15, 23, 42, 0.05),
-    0 0 0 2px rgba(99, 102, 241, 0.2);
+    inset 0 2px 4px rgba(15, 23, 42, 0.06),
+    0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .inset-field input,
@@ -437,47 +593,55 @@
   color: inherit;
 }
 
-/* General Modern Glass/Matte Cards */
-.cyber-panel {
-  background: rgba(24, 24, 32, 0.88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+/* =========================================================================
+   CYBER-PANEL TO LIQUID-GLASS-PANEL MAPPING
+   ========================================================================= */
+.cyber-panel,
+.liquid-glass-panel {
+  border-radius: var(--squircle-radius, 1.75rem);
+  background: rgba(18, 18, 26, 0.82);
+  backdrop-filter: blur(32px) saturate(210%) brightness(1.05);
+  -webkit-backdrop-filter: blur(32px) saturate(210%) brightness(1.05);
   box-shadow: 
-    0 16px 36px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px 0 rgba(0, 0, 0, 0.5),
+    0 24px 50px -15px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.38);
 }
 
-:root:not(.dark) .cyber-panel {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+:root:not(.dark) .cyber-panel,
+:root:not(.dark) .liquid-glass-panel {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-top-color: #ffffff;
   box-shadow: 
-    0 16px 32px -12px rgba(15, 23, 42, 0.08),
-    0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    0 20px 40px -12px rgba(15, 23, 42, 0.12);
 }
 
-/* Micro-interaction Pill Button Press */
+/* Tactile button micro-interaction */
 .btn-tactile {
   border-radius: 9999px;
-  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-tactile:active {
-  transform: scale(0.96);
+  transform: scale(0.965);
 }
 
 /* Monospace Badge Tag */
 .tag-mono {
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-/* Custom Scrollbar */
+/* Custom Refractive Glass Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -485,10 +649,36 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 9999px;
+  backdrop-filter: blur(10px);
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+/* Accessibility: Graceful Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-ambient-canvas,
+  .orb-violet,
+  .orb-cyan,
+  .orb-rose,
+  .orb-emerald {
+    animation: none !important;
+  }
+  .liquid-glass-card,
+  .ticket-pass,
+  .liquid-glass-btn,
+  .glow-orb-btn {
+    transition: none !important;
+  }
 }

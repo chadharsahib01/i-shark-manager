@@ -11,14 +11,71 @@ import { TestsManager } from './components/Admin/TestsManager';
 import { StudentDashboard } from './components/Student/StudentDashboard';
 import { GraduationCap } from 'lucide-react';
 
-// Cyber Canvas Background with animated blueprint grid and ambient glowing orbs
-function CyberCanvasBackground() {
+/* =========================================================================
+   SVG OPTICAL REFRACTION FILTERS (Apple Liquid Glass Real Refraction)
+   ========================================================================= */
+function LiquidGlassSvgFilters() {
   return (
-    <div className="cyber-canvas-background" aria-hidden="true">
-      <div className="cyber-grid-overlay" />
-      <div className="cyber-glow-blob blob-violet" />
-      <div className="cyber-glow-blob blob-rose" />
-      <div className="cyber-glow-blob blob-lime" />
+    <svg className="sr-only pointer-events-none absolute w-0 h-0" aria-hidden="true">
+      <defs>
+        {/* Real optical displacement & edge refraction */}
+        <filter
+          id="liquid-refraction"
+          x="-15%"
+          y="-15%"
+          width="130%"
+          height="130%"
+          filterUnits="objectBoundingBox"
+          primitiveUnits="userSpaceOnUse"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.02 0.02"
+            numOctaves="2"
+            seed="42"
+            result="noise"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="noise"
+            scale="10"
+            xChannelSelector="R"
+            yChannelSelector="G"
+            result="displaced"
+          />
+          <feGaussianBlur in="displaced" stdDeviation="0.4" result="blurred" />
+          <feMerge>
+            <feMergeNode in="blurred" />
+          </feMerge>
+        </filter>
+
+        {/* Chromatic edge dispersion for rim light */}
+        <filter id="liquid-chromatic" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="turbulence" baseFrequency="0.015 0.015" numOctaves="1" result="turb" />
+          <feDisplacementMap in="SourceGraphic" in2="turb" scale="6" xChannelSelector="R" yChannelSelector="B" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+
+/* =========================================================================
+   APPLE LIQUID GLASS CHROMATIC BACKDROP
+   ========================================================================= */
+function LiquidGlassBackdrop() {
+  return (
+    <div className="liquid-glass-backdrop" aria-hidden="true">
+      {/* Real Optical Caustic Ambient Canvas */}
+      <div className="liquid-ambient-canvas" />
+
+      {/* Adaptive Color Sampling Floating Chromatic Orbs */}
+      <div className="liquid-chromatic-orb orb-violet" />
+      <div className="liquid-chromatic-orb orb-cyan" />
+      <div className="liquid-chromatic-orb orb-rose" />
+      <div className="liquid-chromatic-orb orb-emerald" />
+
+      {/* SVG Optical Refraction Filters in the DOM */}
+      <LiquidGlassSvgFilters />
     </div>
   );
 }
@@ -45,6 +102,52 @@ function AppContent() {
     }
   }, [darkMode]);
 
+  // Dynamic Specular Highlight Tracking: Updates --highlight-x, --highlight-y, --tilt-x, --tilt-y on mousemove & device tilt
+  useEffect(() => {
+    let rafId: number;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const xPct = Math.round((e.clientX / window.innerWidth) * 100);
+        const yPct = Math.round((e.clientY / window.innerHeight) * 100);
+        
+        // Tilt angles (-8deg to +8deg)
+        const tiltX = (((e.clientY / window.innerHeight) - 0.5) * -12).toFixed(1);
+        const tiltY = (((e.clientX / window.innerWidth) - 0.5) * 12).toFixed(1);
+
+        document.documentElement.style.setProperty('--highlight-x', `${xPct}%`);
+        document.documentElement.style.setProperty('--highlight-y', `${yPct}%`);
+        document.documentElement.style.setProperty('--tilt-x', `${tiltX}deg`);
+        document.documentElement.style.setProperty('--tilt-y', `${tiltY}deg`);
+        document.documentElement.style.setProperty('--mouse-px', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-py', `${e.clientY}px`);
+      });
+    };
+
+    const handleDeviceOrientation = (e: DeviceOrientationEvent) => {
+      if (e.gamma !== null && e.beta !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          // Normalize gamma (-45 to 45) and beta (-45 to 45) to percentages
+          const xPct = Math.min(Math.max(Math.round(((e.gamma! + 45) / 90) * 100), 10), 90);
+          const yPct = Math.min(Math.max(Math.round(((e.beta! + 45) / 90) * 100), 10), 90);
+          document.documentElement.style.setProperty('--highlight-x', `${xPct}%`);
+          document.documentElement.style.setProperty('--highlight-y', `${yPct}%`);
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('deviceorientation', handleDeviceOrientation);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   const toggleDarkMode = () => {
     setDarkMode((prev) => !prev);
   };
@@ -61,13 +164,13 @@ function AppContent() {
     }
   }, [loading, currentUser, userProfile, logout]);
 
-  // Loading skeleton screen
+  // Loading skeleton screen with Liquid Glass Squircle
   if (loading) {
     return (
-      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-900 text-slate-100 dark:bg-slate-950 transition-colors">
-        <CyberCanvasBackground />
-        <div className="relative z-10 cyber-panel p-8 rounded-3xl flex flex-col items-center space-y-5 max-w-xs w-full text-center shadow-2xl border border-violet-500/20">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 animate-pulse">
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-950 text-slate-100 transition-colors">
+        <LiquidGlassBackdrop />
+        <div className="relative z-10 liquid-glass-card p-8 rounded-3xl flex flex-col items-center space-y-5 max-w-xs w-full text-center shadow-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-rose-500 flex items-center justify-center text-white shadow-xl shadow-violet-600/40 animate-pulse">
             <GraduationCap className="w-8 h-8" />
           </div>
           <div>
@@ -76,11 +179,11 @@ function AppContent() {
               I-SHARK ICT
             </h2>
             <p className="text-xs text-slate-400 mt-1 font-mono">
-              LOADING DASHBOARD...
+              LOADING LIQUID GLASS OS...
             </p>
           </div>
-          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-gradient-to-r from-violet-500 to-rose-400 h-1.5 rounded-full w-2/3 animate-pulse" />
+          <div className="w-full bg-slate-900/80 rounded-full h-1.5 overflow-hidden p-0.5 border border-white/10">
+            <div className="bg-gradient-to-r from-violet-500 via-indigo-400 to-rose-400 h-1 rounded-full w-2/3 animate-pulse" />
           </div>
         </div>
       </div>
@@ -90,8 +193,8 @@ function AppContent() {
   // If not signed in, show the Login Page
   if (!currentUser) {
     return (
-      <div className="relative min-h-screen bg-slate-900 dark:bg-slate-950 transition-colors">
-        <CyberCanvasBackground />
+      <div className="relative min-h-screen bg-slate-950 transition-colors">
+        <LiquidGlassBackdrop />
         <div className="relative z-10">
           <LoginPage darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
         </div>
@@ -102,9 +205,9 @@ function AppContent() {
   // If currentUser is signed in but userProfile is missing, do not render panel
   if (!userProfile) {
     return (
-      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-900 dark:bg-slate-950 transition-colors">
-        <CyberCanvasBackground />
-        <div className="relative z-10 cyber-panel p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-slate-950 transition-colors">
+        <LiquidGlassBackdrop />
+        <div className="relative z-10 liquid-glass-card p-8 rounded-3xl flex flex-col items-center space-y-3 max-w-xs w-full text-center shadow-2xl">
           <p className="text-xs font-mono font-semibold text-slate-400">
             VERIFYING ACCOUNT...
           </p>
@@ -116,11 +219,11 @@ function AppContent() {
   const role = userProfile.role;
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-slate-900 dark:bg-slate-950 text-slate-100 transition-colors">
-      <CyberCanvasBackground />
+    <div className="relative min-h-screen flex flex-col bg-slate-950 text-slate-100 transition-colors">
+      <LiquidGlassBackdrop />
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Navigation: Cyber Sidebar + Sticky Header + Floating Mobile Tab Bar */}
+        {/* Navigation: Apple Liquid Glass Sidebar + Floating Header + VisionOS Tab Bar */}
         <Navigation
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
